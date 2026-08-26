@@ -1,6 +1,5 @@
 # Environment Variables
 .env
-.env.*
 
 # Node.js
 node_modules/
@@ -63,3 +62,11 @@ ehthumbs_vista.db
 
 # AI Storage & Large Weights
 backend/python-ai/storage/
+
+# Vite / Frontend Specific
+dist-ssr
+*.local
+pnpm-debug.log*
+lerna-debug.log*
+logs
+*.log
