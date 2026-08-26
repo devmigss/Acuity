@@ -114,15 +114,15 @@ Core responsibilities:
 
 The capstone explicitly specifies:
 
-| Technology | Role |
-|---|---|
-| React.js | Main frontend framework / SPA |
-| JavaScript ES6+ | Client-side programming |
-| Vite / Node development server | Local frontend development |
-| Konva.js / React-Konva | Interactive annotation canvas |
-| HTML5 Canvas | Canvas rendering and annotation |
-| Git / GitHub | Version control and collaboration |
-| VS Code | Full-stack JavaScript development |
+| Technology                     | Role                              |
+| ------------------------------ | --------------------------------- |
+| React.js                       | Main frontend framework / SPA     |
+| JavaScript ES6+                | Client-side programming           |
+| Vite / Node development server | Local frontend development        |
+| Konva.js / React-Konva         | Interactive annotation canvas     |
+| HTML5 Canvas                   | Canvas rendering and annotation   |
+| Git / GitHub                   | Version control and collaboration |
+| VS Code                        | Full-stack JavaScript development |
 
 ### Styling note
 
@@ -141,24 +141,24 @@ Therefore:
 
 The capstone specifies the following server-side technologies and infrastructure:
 
-| Technology | Role |
-|---|---|
-| Node.js + Express.js | Primary REST API, multi-tenant routing, WebSockets |
-| Python 3 + FastAPI | Computer Vision / AI microservice |
-| OpenCV | ROI masking and computer vision processing |
-| SOD-YOLOv8 | Small-object colony detection model |
-| Amazon RDS / PostgreSQL | Primary relational database |
-| Amazon DynamoDB | Supplementary storage for raw AI output logs and audit trails |
-| Redis | Processing queue / in-memory store |
-| Amazon S3 | Raw and web-resolution image storage |
-| AWS Cognito | Authentication, JWTs, OTPs |
-| AWS SES or SendGrid | Email delivery |
-| Nginx | Web server / reverse proxy |
-| PM2 or Gunicorn | Process management |
-| AWS EC2 | Backend hosting |
-| AWS SageMaker | AI compute |
-| Hostinger or AWS Amplify | Frontend hosting |
-| Postman | API development/testing |
+| Technology               | Role                                                          |
+| ------------------------ | ------------------------------------------------------------- |
+| Node.js + Express.js     | Primary REST API, multi-tenant routing, WebSockets            |
+| Python 3 + FastAPI       | Computer Vision / AI microservice                             |
+| OpenCV                   | ROI masking and computer vision processing                    |
+| SOD-YOLOv8               | Small-object colony detection model                           |
+| Amazon RDS / PostgreSQL  | Primary relational database                                   |
+| Amazon DynamoDB          | Supplementary storage for raw AI output logs and audit trails |
+| Redis                    | Processing queue / in-memory store                            |
+| Amazon S3                | Raw and web-resolution image storage                          |
+| AWS Cognito              | Authentication, JWTs, OTPs                                    |
+| AWS SES or SendGrid      | Email delivery                                                |
+| Nginx                    | Web server / reverse proxy                                    |
+| PM2 or Gunicorn          | Process management                                            |
+| AWS EC2                  | Backend hosting                                               |
+| AWS SageMaker            | AI compute                                                    |
+| Hostinger or AWS Amplify | Frontend hosting                                              |
+| Postman                  | API development/testing                                       |
 
 ---
 

@@ -1,0 +1,8 @@
+fastapi==0.109.2
+uvicorn==0.27.1
+sqlmodel==0.0.16
+alembic==1.13.1
+opencv-python-headless==4.9.0.80
+torch
+ultralytics
+redis

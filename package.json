@@ -1,0 +1,13 @@
+{
+  "name": "acuity-monorepo",
+  "private": true,
+  "workspaces": [
+    "frontend",
+    "backend/node-api"
+  ],
+  "scripts": {
+    "start:frontend": "npm run start --workspace=frontend",
+    "start:api": "npm run start --workspace=backend/node-api",
+    "install:all": "npm install"
+  }
+}
