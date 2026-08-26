@@ -31,3 +31,26 @@ Designed as a modern web alternative to legacy software like ImageJ, it utilizes
 - PostgreSQL (Amazon RDS) & Redis
 - Amazon S3 Object Storage
 - Docker & AWS EC2
+
+## 🚀 Getting Started (For Developers)
+
+### 1. Initial Setup
+
+Make sure you have Node.js 18+ and Python 3.12+ installed. Run the root install to setup the workspaces:
+
+```bash
+npm run install:all
+```
+
+### 2. Downloading AI Weights (Required)
+
+Since our PyTorch and YOLOv8 models are too large for Git, they are not included when you clone this repo. You **must** download them manually before running the AI microservice.
+
+Run the provided download script from your terminal:
+
+```bash
+cd backend/python-ai
+python scripts/download_weights.py
+```
+
+_This script will fetch the latest weights and place them securely inside the ignored `ml_core/base_weights/` directory._
