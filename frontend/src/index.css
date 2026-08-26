@@ -1,1 +1,132 @@
 @import "tailwindcss";
+
+/* ────────────────────────────────────────────
+   Acuity — Design System Tokens (Tailwind v4)
+   
+   Color palettes derived from the Acuity brand:
+   - Primary: Navy (#1B2A4A base)
+   - Accent:  Gold  (#D4A843 base)
+   - Surface: Neutral grays
+   - Danger:  Red
+   ──────────────────────────────────────────── */
+
+@theme {
+  /* ── Primary (Navy) ── */
+  --color-primary-50:  #EEF1F6;
+  --color-primary-100: #D5DBE7;
+  --color-primary-200: #ABB7CF;
+  --color-primary-300: #8193B7;
+  --color-primary-400: #576F9F;
+  --color-primary-500: #2D4B87;
+  --color-primary-600: #1B2A4A;
+  --color-primary-700: #162240;
+  --color-primary-800: #111A33;
+  --color-primary-900: #0B1122;
+  --color-primary-950: #060A14;
+
+  /* ── Accent (Gold) ── */
+  --color-accent-50:  #FDF8ED;
+  --color-accent-100: #F9EDD0;
+  --color-accent-200: #F3DBA1;
+  --color-accent-300: #EDC972;
+  --color-accent-400: #D4A843;
+  --color-accent-500: #C49A30;
+  --color-accent-600: #A37E25;
+  --color-accent-700: #82631E;
+  --color-accent-800: #614A17;
+  --color-accent-900: #40310F;
+
+  /* ── Surface (Neutral) ── */
+  --color-surface-50:  #F9FAFB;
+  --color-surface-100: #F3F4F6;
+  --color-surface-200: #E5E7EB;
+  --color-surface-300: #D1D5DB;
+  --color-surface-400: #9CA3AF;
+  --color-surface-500: #6B7280;
+  --color-surface-600: #4B5563;
+  --color-surface-700: #374151;
+  --color-surface-800: #1F2937;
+  --color-surface-900: #111827;
+  --color-surface-950: #030712;
+
+  /* ── Danger (Red) ── */
+  --color-danger-50:  #FEF2F2;
+  --color-danger-100: #FEE2E2;
+  --color-danger-200: #FECACA;
+  --color-danger-300: #FCA5A5;
+  --color-danger-400: #F87171;
+  --color-danger-500: #EF4444;
+  --color-danger-600: #DC2626;
+  --color-danger-700: #B91C1C;
+  --color-danger-800: #991B1B;
+  --color-danger-900: #7F1D1D;
+
+  /* ── Typography ── */
+  --font-sans: "Inter", ui-sans-serif, system-ui, -apple-system, sans-serif;
+
+  /* ── Custom spacing ── */
+  --spacing-sidebar: 16rem;
+}
+
+/* ────────────────────────────────────────────
+   Base Styles
+   ──────────────────────────────────────────── */
+
+html {
+  scroll-behavior: smooth;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+  /* Prevent horizontal layout shifts across scrollable and non-scrollable routes */
+  scrollbar-gutter: stable;
+}
+
+body {
+  font-family: var(--font-sans);
+  color: var(--color-surface-800);
+  background-color: #ffffff;
+}
+
+/* ────────────────────────────────────────────
+   Micro-Animations (Subtle & Performant)
+   ──────────────────────────────────────────── */
+
+@keyframes fadeInUp {
+  from {
+    opacity: 0;
+    transform: translateY(8px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.fade-in-up {
+  opacity: 0;
+  animation: fadeInUp 0.5s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+}
+
+.animation-delay-75 {
+  animation-delay: 75ms;
+}
+
+.animation-delay-150 {
+  animation-delay: 150ms;
+}
+
+.animation-delay-225 {
+  animation-delay: 225ms;
+}
+
+.animation-delay-300 {
+  animation-delay: 300ms;
+}
+
+/* Accessibility: Respect Reduced Motion */
+@media (prefers-reduced-motion: reduce) {
+  .fade-in-up {
+    opacity: 1 !important;
+    transform: none !important;
+    animation: none !important;
+  }
+}
