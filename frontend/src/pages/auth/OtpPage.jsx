@@ -271,7 +271,7 @@ export default function OtpPage() {
                   size="lg"
                   loading={isLoading}
                   disabled={otp.join('').length < 6}
-                  className="w-full font-bold bg-primary-900 hover:bg-primary-800 text-white py-3 rounded-lg text-sm transition-colors cursor-pointer disabled:opacity-50"
+                  className="w-full font-bold bg-[#0B1F3A] hover:bg-[#071527] text-white py-3 rounded-lg text-sm transition-colors cursor-pointer disabled:opacity-50 shadow-xs"
                 >
                   Verify & Continue
                 </Button>
@@ -283,7 +283,7 @@ export default function OtpPage() {
                 <button
                   type="button"
                   onClick={handleResend}
-                  className="font-semibold text-accent-500 hover:text-accent-600 transition-colors cursor-pointer focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary-500 rounded"
+                  className="font-semibold text-accent-600 hover:text-accent-700 transition-colors cursor-pointer focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary-500 rounded"
                 >
                   Resend OTP
                 </button>
@@ -302,7 +302,7 @@ export default function OtpPage() {
               <div className="text-center">
                 <Link
                   to={ROUTES.AUTH.LOGIN}
-                  className="text-sm font-semibold text-primary-900 hover:text-primary-700 transition-colors"
+                  className="text-sm font-semibold text-primary-600 hover:text-primary-700 transition-colors"
                 >
                   Back to sign in
                 </Link>

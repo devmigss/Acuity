@@ -11,6 +11,7 @@
 import { useState } from 'react'
 import { Link } from 'react-router-dom'
 import { ROUTES } from '@/routes/routeConstants'
+import acuityLogo from '@/assets/branding/acuity-logo.png'
 
 export default function Navbar({ variant = 'full' }) {
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false)
@@ -21,38 +22,24 @@ export default function Navbar({ variant = 'full' }) {
   const isAuth = variant === 'auth'
 
   return (
-    <header className="sticky top-0 z-50 bg-primary-900 border-b border-primary-950">
+    <header className="sticky top-0 z-50 bg-[#0B1F3A] border-b border-[#05101E]/80 shadow-xs">
       <nav
         className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8"
         aria-label={isAuth ? 'Authentication navigation' : 'Main navigation'}
       >
-        <div className="flex h-16 items-center justify-between">
+        <div className="flex h-16 sm:h-18 items-center justify-between">
           {/* ── Logo ── */}
           <Link
             to={ROUTES.HOME}
-            className="flex items-center gap-2.5 group focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent-400 rounded-lg"
+            className="flex items-center gap-2.5 group focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent-400 rounded-lg py-1 px-1 -ml-1"
             aria-label="Acuity — Home"
             onClick={closeMobileMenu}
           >
-            {/* Lens / eye icon */}
-            <svg
-              className="h-8 w-8 text-accent-400 transition-colors group-hover:text-accent-300"
-              viewBox="0 0 32 32"
-              fill="none"
-              xmlns="http://www.w3.org/2000/svg"
-              aria-hidden="true"
-            >
-              <circle cx="16" cy="16" r="14" stroke="currentColor" strokeWidth="2.5" />
-              <circle cx="16" cy="16" r="7" stroke="currentColor" strokeWidth="2" />
-              <circle cx="16" cy="16" r="2.5" fill="currentColor" />
-              <path d="M16 2V6" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" />
-              <path d="M16 26V30" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" />
-              <path d="M2 16H6" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" />
-              <path d="M26 16H30" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" />
-            </svg>
-            <span className="text-xl font-bold text-white tracking-tight">
-              Acuity
-            </span>
+            <img
+              src={acuityLogo}
+              alt="Acuity"
+              className="h-8 sm:h-9 md:h-10 w-auto object-contain transition-transform duration-200 group-hover:scale-105"
+            />
           </Link>
 
           {/* ── Public Navigation (Hidden in Auth variant) ── */}
@@ -62,19 +49,19 @@ export default function Navbar({ variant = 'full' }) {
               <div className="hidden md:flex items-center gap-6">
                 <Link
                   to={ROUTES.ABOUT}
-                  className="text-sm font-medium text-primary-100 hover:text-white transition-colors"
+                  className="text-sm font-medium text-white/85 hover:text-white transition-colors"
                 >
                   About
                 </Link>
                 <Link
                   to={ROUTES.AUTH.REGISTER}
-                  className="text-sm font-medium text-primary-100 hover:text-white transition-colors"
+                  className="text-sm font-medium text-white/85 hover:text-white transition-colors"
                 >
                   Sign Up
                 </Link>
                 <Link
                   to={ROUTES.AUTH.LOGIN}
-                  className="inline-flex items-center justify-center px-5 py-2 text-sm font-semibold rounded-lg bg-accent-400 text-white hover:bg-accent-500 transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent-400 focus-visible:ring-offset-2 focus-visible:ring-offset-primary-900 cursor-pointer"
+                  className="inline-flex items-center justify-center px-5 py-2 text-sm font-semibold rounded-lg bg-accent-400 text-[#0B1F3A] hover:bg-accent-300 transition-colors shadow-xs focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent-400 focus-visible:ring-offset-2 focus-visible:ring-offset-[#0B1F3A] cursor-pointer"
                 >
                   Sign In
                 </Link>
@@ -83,7 +70,7 @@ export default function Navbar({ variant = 'full' }) {
               {/* Mobile Hamburger */}
               <button
                 type="button"
-                className="md:hidden inline-flex items-center justify-center p-2 rounded-lg text-primary-200 hover:text-white hover:bg-primary-800 transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent-400"
+                className="md:hidden inline-flex items-center justify-center p-2 rounded-lg text-white/80 hover:text-white hover:bg-white/10 transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent-400 cursor-pointer"
                 onClick={toggleMobileMenu}
                 aria-expanded={isMobileMenuOpen}
                 aria-controls="mobile-menu"
@@ -109,29 +96,28 @@ export default function Navbar({ variant = 'full' }) {
         {!isAuth && (
           <div
             id="mobile-menu"
-            className={`md:hidden overflow-hidden transition-all duration-200 ease-in-out ${
-              isMobileMenuOpen ? 'max-h-64 pb-4' : 'max-h-0'
-            }`}
+            className={`md:hidden overflow-hidden transition-all duration-200 ease-in-out ${isMobileMenuOpen ? 'max-h-64 pb-4' : 'max-h-0'
+              }`}
           >
-            <div className="flex flex-col gap-1 pt-2 border-t border-primary-800">
+            <div className="flex flex-col gap-1 pt-2 border-t border-white/10">
               <Link
                 to={ROUTES.ABOUT}
                 onClick={closeMobileMenu}
-                className="block px-3 py-2.5 rounded-lg text-sm font-medium text-primary-100 hover:text-white hover:bg-primary-800 transition-colors"
+                className="block px-3 py-2.5 rounded-lg text-sm font-medium text-white/90 hover:text-white hover:bg-white/10 transition-colors"
               >
                 About
               </Link>
               <Link
                 to={ROUTES.AUTH.REGISTER}
                 onClick={closeMobileMenu}
-                className="block px-3 py-2.5 rounded-lg text-sm font-medium text-primary-100 hover:text-white hover:bg-primary-800 transition-colors"
+                className="block px-3 py-2.5 rounded-lg text-sm font-medium text-white/90 hover:text-white hover:bg-white/10 transition-colors"
               >
                 Sign Up
               </Link>
               <Link
                 to={ROUTES.AUTH.LOGIN}
                 onClick={closeMobileMenu}
-                className="mt-1 block text-center px-3 py-2.5 rounded-lg text-sm font-semibold bg-accent-400 text-white hover:bg-accent-500 transition-colors"
+                className="mt-1 block text-center px-3 py-2.5 rounded-lg text-sm font-semibold bg-accent-400 text-[#0B1F3A] hover:bg-accent-300 transition-colors"
               >
                 Sign In
               </Link>

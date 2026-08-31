@@ -68,7 +68,7 @@ export default function HowItWorks() {
               )}
 
               {/* Step number badge */}
-              <div className="mx-auto lg:mx-0 mb-4 flex items-center justify-center h-10 w-10 rounded-full bg-primary-600 text-white text-sm font-bold">
+              <div className="mx-auto lg:mx-0 mb-4 flex items-center justify-center h-10 w-10 rounded-full bg-[#0B1F3A] text-accent-400 text-sm font-bold shadow-xs">
                 {step.number}
               </div>
 

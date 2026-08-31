@@ -190,7 +190,7 @@ export default function ForgotPasswordPage() {
             </h1>
 
             {/* Explanatory Subtitle */}
-            <p className="mt-2 text-xs sm:text-sm font-medium text-accent-500 max-w-xs leading-relaxed">
+            <p className="mt-2 text-xs sm:text-sm text-surface-500 max-w-xs leading-relaxed">
               No worries! Enter your email address and we&apos;ll send you a link to reset your password.
             </p>
 
@@ -226,7 +226,7 @@ export default function ForgotPasswordPage() {
                   variant="primary"
                   size="lg"
                   loading={isLoading}
-                  className="w-full font-bold bg-primary-900 hover:bg-primary-800 text-white py-3 rounded-lg text-sm transition-colors cursor-pointer"
+                  className="w-full font-bold bg-[#0B1F3A] hover:bg-[#071527] text-white py-3 rounded-lg text-sm transition-colors cursor-pointer shadow-xs"
                 >
                   Send Reset Link
                 </Button>
@@ -245,7 +245,7 @@ export default function ForgotPasswordPage() {
               <div className="text-center">
                 <Link
                   to={ROUTES.AUTH.LOGIN}
-                  className="text-sm font-semibold text-primary-900 hover:text-primary-700 transition-colors"
+                  className="text-sm font-semibold text-primary-600 hover:text-primary-700 transition-colors"
                 >
                   Back to sign in
                 </Link>

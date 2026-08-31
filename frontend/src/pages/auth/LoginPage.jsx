@@ -35,9 +35,7 @@ export default function LoginPage() {
     const newErrors = {}
 
     if (!formData.email.trim()) {
-      newErrors.email = 'Email address is required'
-    } else if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(formData.email.trim())) {
-      newErrors.email = 'Please enter a valid email address'
+      newErrors.email = 'Username or email is required'
     }
 
     if (!formData.password) {
@@ -62,19 +60,23 @@ export default function LoginPage() {
     if (!validateForm()) return
 
     try {
-      await login(formData)
-      // Frontend redirect for development flow
-      navigate(ROUTES.STUDENT.DASHBOARD)
-    } catch {
-      setAuthNotice('Invalid email or password. Please try again.')
+      const loggedInUser = await login(formData)
+      const redirectPath = loggedInUser?.role === 'faculty'
+        ? ROUTES.FACULTY.OVERVIEW
+        : loggedInUser?.role === 'systemadmin'
+        ? ROUTES.ADMIN.OVERVIEW
+        : ROUTES.STUDENT.DASHBOARD
+      navigate(redirectPath, { replace: true })
+    } catch (err) {
+      setAuthNotice(err?.message || 'Invalid email or password. Please try again.')
     }
   }
 
   const handleGoogleSSO = async () => {
     setAuthNotice('')
     try {
-      await login({ provider: 'google' })
-      navigate(ROUTES.STUDENT.DASHBOARD)
+      const loggedInUser = await login({ provider: 'google' })
+      navigate(ROUTES.STUDENT.DASHBOARD, { replace: true })
     } catch {
       setAuthNotice('Google SSO authentication failed.')
     }
@@ -89,7 +91,7 @@ export default function LoginPage() {
       >
         <div className="w-full max-w-xl mx-auto">
           {/* Main Headline */}
-          <h1 className="fade-in-up text-3xl sm:text-4xl lg:text-[42px] xl:text-5xl font-extrabold text-primary-900 tracking-tight leading-[1.15]">
+          <h1 className="fade-in-up text-3xl sm:text-4xl lg:text-[42px] xl:text-5xl font-extrabold text-[#0B1F3A] tracking-tight leading-[1.15]">
             Colony counting, <br />
             without the <span className="text-accent-400">eye strain</span>.
           </h1>
@@ -102,28 +104,28 @@ export default function LoginPage() {
           {/* Cohesive Metrics Component */}
           <div className="fade-in-up animation-delay-150 mt-12 sm:mt-14 lg:mt-16 grid grid-cols-3 gap-6 sm:gap-8 max-w-lg">
             <div className="flex flex-col">
-              <span className="text-3xl sm:text-4xl font-extrabold text-primary-900 tracking-tight leading-none">
+              <span className="text-3xl sm:text-4xl font-extrabold text-[#0B1F3A] tracking-tight leading-none">
                 85%+
               </span>
-              <span className="mt-2 text-xs sm:text-sm font-semibold text-accent-400 tracking-tight leading-snug">
+              <span className="mt-2 text-xs sm:text-sm font-semibold text-accent-600 tracking-tight leading-snug">
                 Target detection F1
               </span>
             </div>
 
             <div className="flex flex-col">
-              <span className="text-3xl sm:text-4xl font-extrabold text-primary-900 tracking-tight leading-none">
+              <span className="text-3xl sm:text-4xl font-extrabold text-[#0B1F3A] tracking-tight leading-none">
                 40-70
               </span>
-              <span className="mt-2 text-xs sm:text-sm font-semibold text-accent-400 tracking-tight leading-snug">
+              <span className="mt-2 text-xs sm:text-sm font-semibold text-accent-600 tracking-tight leading-snug">
                 Fine-tuning images
               </span>
             </div>
 
             <div className="flex flex-col">
-              <span className="text-3xl sm:text-4xl font-extrabold text-primary-900 tracking-tight leading-none">
+              <span className="text-3xl sm:text-4xl font-extrabold text-[#0B1F3A] tracking-tight leading-none">
                 1-click
               </span>
-              <span className="mt-2 text-xs sm:text-sm font-semibold text-accent-400 tracking-tight leading-snug">
+              <span className="mt-2 text-xs sm:text-sm font-semibold text-accent-600 tracking-tight leading-snug">
                 CSV export
               </span>
             </div>
@@ -201,11 +203,11 @@ export default function LoginPage() {
 
           {/* Divider */}
           <div className="my-5 flex items-center gap-3">
-            <div className="flex-1 border-t border-accent-300" aria-hidden="true" />
+            <div className="flex-1 border-t border-surface-200" aria-hidden="true" />
             <span className="text-xs text-surface-400 font-normal">
               or
             </span>
-            <div className="flex-1 border-t border-accent-300" aria-hidden="true" />
+            <div className="flex-1 border-t border-surface-200" aria-hidden="true" />
           </div>
 
           {/* Credential Form */}
@@ -240,7 +242,7 @@ export default function LoginPage() {
               <div className="mt-1.5 flex justify-end">
                 <Link
                   to={ROUTES.AUTH.FORGOT_PASSWORD}
-                  className="text-xs font-medium text-accent-500 hover:text-accent-600 transition-colors"
+                  className="text-xs font-medium text-accent-600 hover:text-accent-700 transition-colors"
                 >
                   Forgot Password?
                 </Link>
@@ -253,7 +255,7 @@ export default function LoginPage() {
                 variant="primary"
                 size="lg"
                 loading={isLoading}
-                className="w-full font-bold bg-primary-900 hover:bg-primary-800 text-white py-3 rounded-lg text-sm transition-colors cursor-pointer"
+                className="w-full font-bold bg-[#0B1F3A] hover:bg-[#071527] text-white py-3 rounded-lg text-sm transition-colors cursor-pointer shadow-xs"
               >
                 Log In
               </Button>
@@ -284,7 +286,7 @@ export default function LoginPage() {
             Don&apos;t have an account?{' '}
             <Link
               to={ROUTES.AUTH.REGISTER}
-              className="font-semibold text-accent-500 hover:text-accent-600 transition-colors"
+              className="font-semibold text-accent-600 hover:text-accent-700 transition-colors"
             >
               Create one
             </Link>

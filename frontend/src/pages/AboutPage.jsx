@@ -415,19 +415,19 @@ export default function AboutPage() {
       </section>
 
       {/* ── 6. Closing CTA ── */}
-      <section className="bg-primary-900 py-16 sm:py-20 text-white">
+      <section className="bg-[#0B1F3A] border-b border-[#05101E]/60 py-16 sm:py-20 text-white">
         <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8 text-center">
           <h2 className="text-2xl sm:text-3xl lg:text-4xl font-extrabold tracking-tight">
             Spend less time counting. <br className="hidden sm:inline" />
             Spend more time <span className="text-accent-400">researching</span>.
           </h2>
           <p className="mt-4 text-sm sm:text-base text-primary-200 max-w-xl mx-auto leading-relaxed">
-            Join biology thesis groups and academic researchers already using Acuity to automate CFU detection, verify counts interactively, and export publication-ready datasets.
+            Designed for biology thesis groups and academic researchers to automate CFU detection, verify counts interactively, and export publication-ready datasets.
           </p>
           <div className="mt-8">
             <Link
               to={ROUTES.AUTH.REGISTER}
-              className="inline-flex items-center justify-center px-8 py-3.5 text-base font-semibold rounded-lg bg-accent-400 text-white hover:bg-accent-500 transition-colors shadow-md focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent-400 focus-visible:ring-offset-2 focus-visible:ring-offset-primary-900 cursor-pointer"
+              className="inline-flex items-center justify-center px-8 py-3.5 text-base font-semibold rounded-lg bg-accent-400 text-[#0B1F3A] hover:bg-accent-300 transition-colors shadow-md focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent-400 focus-visible:ring-offset-2 focus-visible:ring-offset-primary-900 cursor-pointer"
             >
               Get Started — it&apos;s Free
             </Link>

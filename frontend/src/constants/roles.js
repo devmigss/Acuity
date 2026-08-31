@@ -8,5 +8,6 @@
 export const ROLES = {
   STUDENT: 'student',
   FACULTY: 'faculty',
-  ADMIN: 'admin',
+  SYSTEMADMIN: 'systemadmin',
+  ADMIN: 'systemadmin', // Alias for backward compatibility
 }

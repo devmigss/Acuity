@@ -6,7 +6,9 @@
 
 const VARIANTS = {
   primary:
-    'bg-primary-600 text-white hover:bg-primary-700 focus-visible:ring-primary-500',
+    'bg-primary-600 text-white hover:bg-primary-700 focus-visible:ring-primary-500 shadow-xs',
+  accent:
+    'bg-accent-400 text-[#0B1F3A] font-semibold hover:bg-accent-300 focus-visible:ring-accent-400 shadow-xs',
   secondary:
     'bg-surface-200 text-surface-800 hover:bg-surface-300 focus-visible:ring-surface-400',
   danger:
