@@ -77,10 +77,10 @@ export default function FeatureCards() {
           {FEATURES.map((feature, idx) => (
             <article
               key={feature.title}
-              className={`fade-in-up ${DELAYS[idx] || ''} bg-white rounded-xl border border-surface-200 p-6 shadow-sm hover:shadow-md transition-shadow duration-200`}
+              className={`fade-in-up ${DELAYS[idx] || ''} group bg-white rounded-xl border border-surface-200 p-6 shadow-xs hover:shadow-md hover:border-primary-200 transition-all duration-200`}
             >
               {/* Icon */}
-              <div className="mb-4 inline-flex items-center justify-center h-10 w-10 rounded-lg border border-surface-200 text-surface-600">
+              <div className="mb-4 inline-flex items-center justify-center h-10 w-10 rounded-lg bg-primary-50 border border-primary-100 text-primary-600 group-hover:bg-[#0B1F3A] group-hover:text-accent-400 group-hover:border-[#0B1F3A] transition-colors duration-200">
                 {feature.icon}
               </div>
 

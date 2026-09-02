@@ -11,43 +11,49 @@
    ──────────────────────────────────────────── */
 
 @theme {
-  /* ── Primary (Navy) ── */
-  --color-primary-50:  #EEF1F6;
-  --color-primary-100: #D5DBE7;
-  --color-primary-200: #ABB7CF;
-  --color-primary-300: #8193B7;
-  --color-primary-400: #576F9F;
-  --color-primary-500: #2D4B87;
-  --color-primary-600: #1B2A4A;
-  --color-primary-700: #162240;
-  --color-primary-800: #111A33;
-  --color-primary-900: #0B1122;
-  --color-primary-950: #060A14;
+  /* ── Exact Core Brand ── */
+  --color-brand-navy: #0B1F3A;
+  --color-brand-gold: #D4A017;
+  --color-brand-black: #000000;
+  --color-brand-white: #FFFFFF;
 
-  /* ── Accent (Gold) ── */
-  --color-accent-50:  #FDF8ED;
-  --color-accent-100: #F9EDD0;
-  --color-accent-200: #F3DBA1;
-  --color-accent-300: #EDC972;
-  --color-accent-400: #D4A843;
-  --color-accent-500: #C49A30;
-  --color-accent-600: #A37E25;
-  --color-accent-700: #82631E;
-  --color-accent-800: #614A17;
-  --color-accent-900: #40310F;
+  /* ── Primary (Deep Navy Scale — Anchored at #0B1F3A) ── */
+  --color-primary-50:  #F0F4F8;
+  --color-primary-100: #D9E2EC;
+  --color-primary-200: #BCCCDC;
+  --color-primary-300: #829AB1;
+  --color-primary-400: #486581;
+  --color-primary-500: #1E3A5F;
+  --color-primary-600: #0B1F3A;
+  --color-primary-700: #08172C;
+  --color-primary-800: #05101E;
+  --color-primary-900: #030A14;
+  --color-primary-950: #01050A;
 
-  /* ── Surface (Neutral) ── */
-  --color-surface-50:  #F9FAFB;
-  --color-surface-100: #F3F4F6;
-  --color-surface-200: #E5E7EB;
-  --color-surface-300: #D1D5DB;
-  --color-surface-400: #9CA3AF;
-  --color-surface-500: #6B7280;
-  --color-surface-600: #4B5563;
-  --color-surface-700: #374151;
-  --color-surface-800: #1F2937;
-  --color-surface-900: #111827;
-  --color-surface-950: #030712;
+  /* ── Accent (Warm Gold Scale — Anchored at #D4A017) ── */
+  --color-accent-50:  #FCF9EE;
+  --color-accent-100: #F8F0D5;
+  --color-accent-200: #F1DE9F;
+  --color-accent-300: #E6C665;
+  --color-accent-400: #D4A017;
+  --color-accent-500: #B8850C;
+  --color-accent-600: #966B08;
+  --color-accent-700: #745105;
+  --color-accent-800: #523803;
+  --color-accent-900: #302001;
+
+  /* ── Surface (Clean, Modern Slate Neutrals) ── */
+  --color-surface-50:  #F8FAFC;
+  --color-surface-100: #F1F5F9;
+  --color-surface-200: #E2E8F0;
+  --color-surface-300: #CBD5E1;
+  --color-surface-400: #94A3B8;
+  --color-surface-500: #64748B;
+  --color-surface-600: #475569;
+  --color-surface-700: #334155;
+  --color-surface-800: #1E293B;
+  --color-surface-900: #0F172A;
+  --color-surface-950: #020617;
 
   /* ── Danger (Red) ── */
   --color-danger-50:  #FEF2F2;
@@ -129,4 +135,46 @@ body {
     transform: none !important;
     animation: none !important;
   }
+}
+
+/* ────────────────────────────────────────────
+   Workspace: Annotation Canvas + Toast
+   ──────────────────────────────────────────── */
+
+@keyframes slideIn {
+  from {
+    opacity: 0;
+    transform: translateY(-8px) translateX(8px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0) translateX(0);
+  }
+}
+
+.animate-slide-in {
+  animation: slideIn 0.25s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+}
+
+/* Range slider thumb styling for Webkit */
+input[type='range']::-webkit-slider-thumb {
+  -webkit-appearance: none;
+  appearance: none;
+  width: 16px;
+  height: 16px;
+  border-radius: 50%;
+  background: #D4A017;
+  cursor: pointer;
+  border: 2px solid white;
+  box-shadow: 0 1px 3px rgba(0,0,0,0.2);
+}
+
+input[type='range']::-moz-range-thumb {
+  width: 16px;
+  height: 16px;
+  border-radius: 50%;
+  background: #D4A017;
+  cursor: pointer;
+  border: 2px solid white;
+  box-shadow: 0 1px 3px rgba(0,0,0,0.2);
 }

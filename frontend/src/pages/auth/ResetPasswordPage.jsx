@@ -445,7 +445,7 @@ export default function ResetPasswordPage() {
                   variant="primary"
                   size="lg"
                   loading={isLoading}
-                  className="w-full font-bold bg-primary-900 hover:bg-primary-800 text-white py-3 rounded-lg text-sm transition-colors cursor-pointer"
+                  className="w-full font-bold bg-[#0B1F3A] hover:bg-[#071527] text-white py-3 rounded-lg text-sm transition-colors cursor-pointer shadow-xs"
                 >
                   Reset Password
                 </Button>
@@ -464,7 +464,7 @@ export default function ResetPasswordPage() {
               <div className="text-center">
                 <Link
                   to={ROUTES.AUTH.LOGIN}
-                  className="text-sm font-semibold text-primary-900 hover:text-primary-700 transition-colors"
+                  className="text-sm font-semibold text-primary-600 hover:text-primary-700 transition-colors"
                 >
                   Back to sign in
                 </Link>

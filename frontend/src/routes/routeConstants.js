@@ -27,29 +27,33 @@ export const ROUTES = {
   STUDENT: {
     DASHBOARD: '/student/dashboard',
     PROJECTS: '/student/projects',
+    SHARED: '/student/shared',
+    ADVISER_REMARKS: '/student/adviser-remarks',
     PROJECT_DETAIL: '/student/projects/:projectId',
-    WORKSPACE: '/student/projects/:projectId/workspace',
+    WORKSPACE: '/student/projects/:projectId/workspace/:plateId',
+    WORKSPACE_BASE: '/student/projects/:projectId/workspace',
     ANNOTATION: '/student/projects/:projectId/annotation',
     EXPORT: '/student/projects/:projectId/export',
   },
 
   // ── Faculty ──
   FACULTY: {
-    DASHBOARD: '/faculty/dashboard',
-    PROJECTS: '/faculty/projects',
-    REVIEW: '/faculty/projects/:projectId/review',
+    OVERVIEW: '/faculty/overview',
+    REVIEW_QUEUE: '/faculty/review-queue',
+    ADVISEES: '/faculty/advisees',
+    VALIDATED: '/faculty/validated',
   },
 
-  // ── Admin ──
+  // ── System Admin ──
   ADMIN: {
-    DASHBOARD: '/admin/dashboard',
-    USERS: '/admin/users',
-    TENANTS: '/admin/tenants',
+    OVERVIEW: '/admin/overview',
+    USERS_TENANTS: '/admin/users-tenants',
     AUDIT_LOGS: '/admin/audit-logs',
     CONTENT: '/admin/content',
-    SETTINGS: '/admin/settings',
+    DOCUMENTATION: '/admin/documentation',
   },
 
-  // ── Profile ──
-  PROFILE: '/profile',
+  // ── Shared Account ──
+  SETTINGS: '/settings',
+  PROFILE: '/settings',
 }

@@ -123,7 +123,7 @@ export default function RegisterPage() {
       >
         <div className="w-full max-w-xl mx-auto">
           {/* Main Headline */}
-          <h1 className="fade-in-up text-3xl sm:text-4xl lg:text-[42px] xl:text-5xl font-extrabold text-primary-900 tracking-tight leading-[1.15]">
+          <h1 className="fade-in-up text-3xl sm:text-4xl lg:text-[42px] xl:text-5xl font-extrabold text-[#0B1F3A] tracking-tight leading-[1.15]">
             Colony counting, <br />
             without the <span className="text-accent-400">eye strain</span>.
           </h1>
@@ -136,28 +136,28 @@ export default function RegisterPage() {
           {/* Cohesive Metrics Component */}
           <div className="fade-in-up animation-delay-150 mt-12 sm:mt-14 lg:mt-16 grid grid-cols-3 gap-6 sm:gap-8 max-w-lg">
             <div className="flex flex-col">
-              <span className="text-3xl sm:text-4xl font-extrabold text-primary-900 tracking-tight leading-none">
+              <span className="text-3xl sm:text-4xl font-extrabold text-[#0B1F3A] tracking-tight leading-none">
                 85%+
               </span>
-              <span className="mt-2 text-xs sm:text-sm font-semibold text-accent-400 tracking-tight leading-snug">
+              <span className="mt-2 text-xs sm:text-sm font-semibold text-accent-600 tracking-tight leading-snug">
                 Target detection F1
               </span>
             </div>
 
             <div className="flex flex-col">
-              <span className="text-3xl sm:text-4xl font-extrabold text-primary-900 tracking-tight leading-none">
+              <span className="text-3xl sm:text-4xl font-extrabold text-[#0B1F3A] tracking-tight leading-none">
                 40-70
               </span>
-              <span className="mt-2 text-xs sm:text-sm font-semibold text-accent-400 tracking-tight leading-snug">
+              <span className="mt-2 text-xs sm:text-sm font-semibold text-accent-600 tracking-tight leading-snug">
                 Fine-tuning images
               </span>
             </div>
 
             <div className="flex flex-col">
-              <span className="text-3xl sm:text-4xl font-extrabold text-primary-900 tracking-tight leading-none">
+              <span className="text-3xl sm:text-4xl font-extrabold text-[#0B1F3A] tracking-tight leading-none">
                 1-click
               </span>
-              <span className="mt-2 text-xs sm:text-sm font-semibold text-accent-400 tracking-tight leading-snug">
+              <span className="mt-2 text-xs sm:text-sm font-semibold text-accent-600 tracking-tight leading-snug">
                 CSV export
               </span>
             </div>
@@ -352,7 +352,7 @@ export default function RegisterPage() {
                 variant="primary"
                 size="lg"
                 loading={isLoading}
-                className="w-full font-bold bg-primary-900 hover:bg-primary-800 text-white py-3 rounded-lg text-sm transition-colors cursor-pointer"
+                className="w-full font-bold bg-[#0B1F3A] hover:bg-[#071527] text-white py-3 rounded-lg text-sm transition-colors cursor-pointer shadow-xs"
               >
                 Sign Up
               </Button>
@@ -383,7 +383,7 @@ export default function RegisterPage() {
             Already have an account?{' '}
             <Link
               to={ROUTES.AUTH.LOGIN}
-              className="font-semibold text-accent-500 hover:text-accent-600 transition-colors"
+              className="font-semibold text-accent-600 hover:text-accent-700 transition-colors"
             >
               Sign in
             </Link>
