@@ -6,6 +6,7 @@
 
 import PageHeader from '@/components/layout/PageHeader'
 import Card from '@/components/ui/Card'
+import { useToastStore } from '@/store/useToastStore'
 
 const QUEUE_ITEMS = [
   {
@@ -56,7 +57,7 @@ export default function ReviewQueuePage() {
               <div className="flex items-center gap-2 shrink-0">
                 <button
                   type="button"
-                  onClick={() => alert(`Opening inspection workspace for ${item.trial}`)}
+                  onClick={() => useToastStore.getState().addToast(`Opening inspection workspace for ${item.trial}`)}
                   className="px-4 py-2 text-xs font-semibold rounded-lg bg-primary-600 text-white hover:bg-primary-700 transition-colors cursor-pointer"
                 >
                   Review Annotations

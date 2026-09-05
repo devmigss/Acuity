@@ -6,6 +6,7 @@
 
 import PageHeader from '@/components/layout/PageHeader'
 import Card from '@/components/ui/Card'
+import { useToastStore } from '@/store/useToastStore'
 
 const VALIDATED_ITEMS = [
   {
@@ -46,7 +47,7 @@ export default function ValidatedArchivePage() {
 
               <button
                 type="button"
-                onClick={() => alert(`Exporting finalized dataset for ${item.project}`)}
+                onClick={() => useToastStore.getState().addToast(`Exporting finalized dataset for ${item.project}`)}
                 className="px-4 py-2 text-xs font-semibold rounded-lg bg-surface-100 text-surface-800 hover:bg-surface-200 transition-colors cursor-pointer shrink-0"
               >
                 Export CSV / Summary

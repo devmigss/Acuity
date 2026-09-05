@@ -7,6 +7,7 @@
 import PageHeader from '@/components/layout/PageHeader'
 import Card from '@/components/ui/Card'
 import Button from '@/components/ui/Button'
+import { useToastStore } from '@/store/useToastStore'
 
 const MOCK_USERS = [
   {
@@ -46,7 +47,7 @@ export default function UsersTenantsPage() {
         <Button
           type="button"
           variant="primary"
-          onClick={() => alert('Invite User / Provision Tenant modal placeholder')}
+          onClick={() => useToastStore.getState().addToast('Invite User / Provision Tenant modal placeholder')}
         >
           + Provision User / Tenant
         </Button>
@@ -84,7 +85,7 @@ export default function UsersTenantsPage() {
                   <td className="py-3 px-3 text-right">
                     <button
                       type="button"
-                      onClick={() => alert(`Managing permissions for ${u.name}`)}
+                      onClick={() => useToastStore.getState().addToast(`Managing permissions for ${u.name}`)}
                       className="text-xs font-semibold text-primary-600 hover:text-primary-800 underline cursor-pointer"
                     >
                       Manage

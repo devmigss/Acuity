@@ -1,0 +1,66 @@
+# Acuity Backend Architecture Draft
+
+This draft outlines the required backend infrastructure, languages, and tools based on the specifications in the `acuity_requirements.md` document.
+
+## User Review Required
+
+> [!IMPORTANT]  
+> Please review the proposed backend structure below. This strictly follows the capstone requirements. Once you approve this draft, we can proceed with scaffolding the base projects.
+
+## Proposed Architecture and Technology Stack
+
+The backend for Acuity is explicitly designed to be split into two main services to separate standard web API traffic from heavy computer vision workloads.
+
+### 1. Primary API Service
+This service is the main gateway for the frontend, handling all business logic, authorization, database operations, and real-time updates.
+
+* **Language/Framework:** Node.js + Express.js
+* **Responsibilities:** REST API, Multi-tenant routing, WebSocket/Server-Sent Events (SSE) for real-time AI processing status.
+* **Authentication:** AWS Cognito (handling JWTs, OTPs, password workflows).
+* **Primary Database:** PostgreSQL (hosted on Amazon RDS) for structured relational data (Users, Tenants, Projects, Finalized Annotations).
+* **Secondary Database:** Amazon DynamoDB for raw AI output logs and system audit trails.
+* **Storage:** Amazon S3 for storing raw Petri dish uploads and web-optimized image variants.
+* **Queue/In-Memory Store:** Redis for managing the AI processing queue and short-lived session states.
+* **Email Delivery:** AWS SES or SendGrid.
+* **Process Manager:** PM2.
+
+### 2. AI / Computer Vision Microservice
+This service is dedicated purely to image processing and running the detection models. It picks up tasks queued by the Primary API.
+
+* **Language/Framework:** Python 3 + FastAPI
+* **Responsibilities:** Region of Interest (ROI) masking, computer vision processing, and AI inference.
+* **Core Libraries:** OpenCV.
+* **AI Model:** SOD-YOLOv8 (Small-object colony detection model).
+* **Process Manager:** Gunicorn.
+
+### 3. Infrastructure & Deployment (Production)
+* **Web Server/Reverse Proxy:** Nginx.
+* **Compute:** AWS EC2 (for hosting backend services) and AWS SageMaker (for dedicated AI compute).
+
+---
+
+## Open Questions
+
+> [!WARNING]  
+> Before we start writing code or setting up the environment, please clarify the following architectural decisions:
+>
+> 1. **Project Structure:** Do you want to initialize both the Node.js API and the Python AI service within this current workspace (e.g., inside `backend-api/` and `ai-service/` folders), or do you plan to use separate Git repositories?
+> 2. **Node.js Language:** The document requires JavaScript ES6+, but allows TypeScript if the team decides on it. Do you want to stick with **JavaScript ES6+** or use **TypeScript** for the Express API?
+> 3. **Local Development:** Do you want me to set up a `docker-compose.yml` file to easily spin up local instances of PostgreSQL and Redis for development?
+
+## Proposed Changes (Next Steps)
+
+If you approve this plan and answer the open questions, I will execute the following steps:
+
+### Node.js API Scaffold
+- Initialize a `package.json` with core dependencies (Express, Redis client, PostgreSQL client, AWS SDK).
+- Create the foundational folder architecture (e.g., `src/controllers`, `src/routes`, `src/services`, `src/middlewares`).
+- Set up a `.env.example` file.
+
+### Python AI Microservice Scaffold
+- Initialize a `requirements.txt` with core dependencies (FastAPI, Uvicorn, OpenCV, Redis).
+- Create a basic `main.py` entry point with a health check route.
+
+## Verification Plan
+- Run both servers locally to verify they start up successfully.
+- Test basic health check endpoints (`/health`) on both the Express API and FastAPI microservice to ensure the foundation is working.

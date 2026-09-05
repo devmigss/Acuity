@@ -1,0 +1,90 @@
+# Backend Implementation Plan: Step-by-Step Approach
+
+Since the AI detection model is still being trained, we will build the backend by dividing it into clear, independent phases (divisions). We'll start with the easiest, most foundational parts and gradually add complexity. We'll set up a mock or placeholder for the AI service so the main application can function without waiting for the actual model.
+
+## User Review Required
+
+> [!IMPORTANT]
+> Please review the proposed divisions below. Do you agree with starting with the Node.js/Express foundation and PostgreSQL database setup (Phase 1) and leaving the actual AI integration (Phase 5) for later? 
+> Also, for local development, are you comfortable using standard JWTs for authentication before moving to AWS Cognito?
+
+## Open Questions
+
+> [!QUESTION]
+> 1. Do you have a preference for the Object-Relational Mapper (ORM) for PostgreSQL (e.g., Prisma, Sequelize, or TypeORM)? (Prisma is highly recommended for ease of use).
+> 2. Since this uses Node.js, do you want to use TypeScript for better type safety, or stick to plain JavaScript (ES6+)?
+
+---
+
+## Proposed Phases (Divisions)
+
+### Phase 1: Foundation (The Easiest Starting Point)
+**Goal:** Initialize the project, set up the server, and establish the database connection.
+- **Tasks:**
+  - Initialize the Node.js project (`npm init`).
+  - Install core dependencies (Express.js, dotenv, cors, helmet for security).
+  - Create the basic Express server structure (`server.js` or `app.js`).
+  - Set up environment variables (`.env`).
+  - Install and configure the PostgreSQL database connection (using an ORM like Prisma).
+  - Define the initial database schema (Users, Tenants, Roles).
+  - Implement a simple "Health Check" endpoint (e.g., `GET /api/health`) to test if the server is running.
+
+### Phase 2: Authentication & User Management
+**Goal:** Allow users to register, log in, and manage roles.
+- **Tasks:**
+  - Create the User and Role database tables.
+  - Implement User Registration endpoint (`POST /api/auth/register`).
+  - Implement User Login endpoint (`POST /api/auth/login`) with JWT (JSON Web Token) generation.
+  - Create middleware to protect routes (verify JWT).
+  - Implement basic Role-Based Access Control (RBAC) middleware (e.g., verify if user is Student, Faculty, or Admin).
+  - Implement Profile fetching endpoint (`GET /api/users/me`).
+
+### Phase 3: Project Management (Core CRUD)
+**Goal:** Allow students to create and manage their research workspaces.
+- **Tasks:**
+  - Define the `Project` database schema (Title, Description, Owner, Status).
+  - Implement endpoints to Create, Read, Update, and Delete (CRUD) projects.
+  - Implement Project membership (adding collaborators/peers to a project).
+  - Secure these routes so only project members or assigned faculty can access them.
+
+### Phase 4: Image Uploads & Storage (Preparation)
+**Goal:** Handle Petri dish image uploads safely.
+- **Tasks:**
+  - Set up local file storage (using `multer`) as a temporary step before AWS S3.
+  - Create the `Image` database schema linked to a `Project`.
+  - Implement single and batch image upload endpoints.
+  - Validate file types (JPEG, PNG) and sizes.
+
+### Phase 5: The AI Microservice Mock (Bridging the gap)
+**Goal:** Connect the Node backend to the Python AI service, even if the AI isn't ready.
+- **Tasks:**
+  - Create a simple mock FastAPI (Python) service that simulates receiving an image and returning dummy detection data (mock bounding boxes, confidence scores, and CFU counts) after a 5-second delay.
+  - Implement the Node.js logic to send uploaded images to this Python service.
+  - Save the (mocked) AI results to the PostgreSQL database.
+  - This allows the frontend to be developed and tested fully without waiting for the real AI model.
+
+### Phase 6: Annotation & Measurements API
+**Goal:** Save user corrections and feedback.
+- **Tasks:**
+  - Define schemas for human annotations (adjustments to the AI's detections).
+  - Create endpoints to fetch annotations for an image.
+  - Create endpoints to save human-modified bounding boxes, deleted false positives, and adjusted thresholds.
+
+### Phase 7: Faculty Review & Approvals
+**Goal:** Implement the academic review workflow.
+- **Tasks:**
+  - Endpoints for Faculty to fetch assigned projects.
+  - Endpoints to submit feedback, request revisions, or mark a project as "Approved".
+  - Lock project edits if status is "Approved".
+
+---
+
+## Verification Plan
+
+### Automated Tests
+- We will set up basic API tests using a tool like Postman or automated testing frameworks like `Jest` and `Supertest` to verify endpoints return the correct status codes (e.g., 200 OK, 401 Unauthorized).
+
+### Manual Verification
+- We will run the Express server locally.
+- We will use Postman/Insomnia or the browser to hit the `/api/health` endpoint.
+- We will test user registration and login flows to ensure JWTs are issued correctly.

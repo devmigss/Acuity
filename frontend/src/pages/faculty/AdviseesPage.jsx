@@ -6,6 +6,7 @@
 
 import PageHeader from '@/components/layout/PageHeader'
 import Card from '@/components/ui/Card'
+import { useToastStore } from '@/store/useToastStore'
 
 const ADVISEES = [
   {
@@ -58,7 +59,7 @@ export default function AdviseesPage() {
             <div className="pt-2 border-t border-surface-100 flex justify-end">
               <button
                 type="button"
-                onClick={() => alert(`Viewing project overview for ${adv.groupName}`)}
+                onClick={() => useToastStore.getState().addToast(`Viewing project overview for ${adv.groupName}`)}
                 className="text-xs font-semibold text-primary-600 hover:text-primary-800 underline cursor-pointer"
               >
                 View Advisee Submissions →

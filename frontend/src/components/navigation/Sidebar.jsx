@@ -12,6 +12,7 @@ import { useLocation, NavLink } from 'react-router-dom'
 import { useAuth } from '@/context/AuthContext'
 import { ROLE_NAV_CONFIGS } from '@/components/navigation/roleNavigation'
 import { ROLES } from '@/constants/roles'
+import { useToastStore } from '@/store/useToastStore'
 
 // Icon mapper for navigation items
 function NavIcon({ id, className = 'w-5 h-5' }) {
@@ -261,7 +262,7 @@ export default function Sidebar({ isOpen, onClose }) {
           <button
             type="button"
             onClick={() => {
-              alert('Support: Contact your university faculty administrator or email support@acuity.app.')
+              useToastStore.getState().addToast('Support: Contact your university faculty administrator or email support@acuity.app.')
             }}
             className="w-full flex items-center gap-3 px-3.5 py-2 rounded-xl text-sm font-medium text-surface-600 hover:text-surface-900 hover:bg-surface-100/80 transition-colors cursor-pointer text-left"
           >
