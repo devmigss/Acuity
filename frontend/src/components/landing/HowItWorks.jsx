@@ -59,13 +59,11 @@ export default function HowItWorks() {
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-8 lg:gap-6">
           {STEPS.map((step, idx) => (
             <div key={step.number} className={`fade-in-up ${DELAYS[idx] || ''} relative text-center lg:text-left group cursor-pointer hover:-translate-y-2 transition-transform duration-300`}>
-              {/* Connecting line (desktop only, between steps) */}
-              {idx < STEPS.length - 1 && (
-                <div
-                  className="hidden lg:block absolute top-5 left-[56px] w-[calc(100%-48px)] h-px bg-surface-200 transition-colors duration-300 group-hover:bg-primary-300"
-                  aria-hidden="true"
-                />
-              )}
+              {/* Connecting line (desktop only, for all steps as requested) */}
+              <div
+                className="hidden lg:block absolute top-5 left-[56px] w-[calc(100%-48px)] h-px bg-surface-200 transition-colors duration-300 group-hover:bg-primary-300"
+                aria-hidden="true"
+              />
 
               {/* Step number badge */}
               <div className="mx-auto lg:mx-0 mb-4 flex items-center justify-center h-10 w-10 rounded-full bg-[#0B1F3A] text-accent-400 text-sm font-bold shadow-xs transition-all duration-300 group-hover:bg-primary-500 group-hover:text-white group-hover:shadow-lg">
