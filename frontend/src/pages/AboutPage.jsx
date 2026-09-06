@@ -115,13 +115,13 @@ export default function AboutPage() {
 
           <div className="grid grid-cols-1 md:grid-cols-3 gap-6 lg:gap-8">
             {/* Card 1 */}
-            <div className="bg-white rounded-xl border border-surface-200 p-6 sm:p-8 shadow-xs">
-              <div className="w-10 h-10 rounded-lg bg-danger-50 text-danger-600 flex items-center justify-center font-bold mb-4">
+            <div className="fade-in-up bg-white rounded-xl border border-surface-200 p-6 sm:p-8 shadow-xs group cursor-pointer hover:-translate-y-2 transition-all duration-300 hover:shadow-lg hover:border-danger-200">
+              <div className="w-10 h-10 rounded-lg bg-danger-50 text-danger-600 flex items-center justify-center font-bold mb-4 transition-colors duration-300 group-hover:bg-danger-600 group-hover:text-white">
                 <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="2">
                   <path strokeLinecap="round" strokeLinejoin="round" d="M12 9v3.75m9-.75a9 9 0 1 1-18 0 9 9 0 0 1 18 0Zm-9 3.75h.008v.008H12v-.008Z" />
                 </svg>
               </div>
-              <h4 className="text-base font-bold text-surface-900 mb-2">
+              <h4 className="text-base font-bold text-surface-900 mb-2 transition-colors duration-300 group-hover:text-danger-600">
                 Visual Fatigue & Eye Strain
               </h4>
               <p className="text-sm text-surface-500 leading-relaxed">
@@ -130,13 +130,13 @@ export default function AboutPage() {
             </div>
 
             {/* Card 2 */}
-            <div className="bg-white rounded-xl border border-surface-200 p-6 sm:p-8 shadow-xs">
-              <div className="w-10 h-10 rounded-lg bg-accent-50 text-accent-600 flex items-center justify-center font-bold mb-4">
+            <div className="fade-in-up animation-delay-75 bg-white rounded-xl border border-surface-200 p-6 sm:p-8 shadow-xs group cursor-pointer hover:-translate-y-2 transition-all duration-300 hover:shadow-lg hover:border-accent-200">
+              <div className="w-10 h-10 rounded-lg bg-accent-50 text-accent-600 flex items-center justify-center font-bold mb-4 transition-colors duration-300 group-hover:bg-accent-600 group-hover:text-white">
                 <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="2">
                   <path strokeLinecap="round" strokeLinejoin="round" d="M19.5 14.25v-2.625a3.375 3.375 0 0 0-3.375-3.375h-1.5A1.125 1.125 0 0 1 13.5 7.125v-1.5a3.375 3.375 0 0 0-3.375-3.375H8.25m0 12.75h7.5m-7.5 3H12M10.5 2.25H5.625c-.621 0-1.125.504-1.125 1.125v17.25c0 .621.504 1.125 1.125 1.125h12.75c.621 0 1.125-.504 1.125-1.125V11.25a9 9 0 0 0-9-9Z" />
                 </svg>
               </div>
-              <h4 className="text-base font-bold text-surface-900 mb-2">
+              <h4 className="text-base font-bold text-surface-900 mb-2 transition-colors duration-300 group-hover:text-accent-600">
                 Transcription & Counting Errors
               </h4>
               <p className="text-sm text-surface-500 leading-relaxed">
@@ -145,13 +145,13 @@ export default function AboutPage() {
             </div>
 
             {/* Card 3 */}
-            <div className="bg-white rounded-xl border border-surface-200 p-6 sm:p-8 shadow-xs">
-              <div className="w-10 h-10 rounded-lg bg-primary-50 text-primary-600 flex items-center justify-center font-bold mb-4">
+            <div className="fade-in-up animation-delay-150 bg-white rounded-xl border border-surface-200 p-6 sm:p-8 shadow-xs group cursor-pointer hover:-translate-y-2 transition-all duration-300 hover:shadow-lg hover:border-primary-200">
+              <div className="w-10 h-10 rounded-lg bg-primary-50 text-primary-600 flex items-center justify-center font-bold mb-4 transition-colors duration-300 group-hover:bg-primary-600 group-hover:text-white">
                 <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="2">
                   <path strokeLinecap="round" strokeLinejoin="round" d="M9 12.75 11.25 15 15 9.75m-3-7.036A11.959 11.959 0 0 1 3.598 6 11.99 11.99 0 0 0 3 9.749c0 5.592 3.824 10.29 9 11.623 5.176-1.332 9-6.03 9-11.622 0-1.31-.21-2.571-.598-3.751h-.152c-3.196 0-6.1-1.248-8.25-3.285Z" />
                 </svg>
               </div>
-              <h4 className="text-base font-bold text-surface-900 mb-2">
+              <h4 className="text-base font-bold text-surface-900 mb-2 transition-colors duration-300 group-hover:text-primary-600">
                 Verification Bottlenecks
               </h4>
               <p className="text-sm text-surface-500 leading-relaxed">
@@ -179,36 +179,36 @@ export default function AboutPage() {
 
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-8 lg:gap-6">
             {/* Step 1 */}
-            <div className="relative text-left">
-              <div className="text-3xl font-extrabold text-accent-400 mb-2">01</div>
-              <h4 className="text-base font-bold text-surface-900 mb-2">Upload</h4>
+            <div className="fade-in-up relative text-left group cursor-pointer hover:-translate-y-2 transition-transform duration-300">
+              <div className="text-3xl font-extrabold text-accent-400 mb-2 transition-colors duration-300 group-hover:text-primary-500">01</div>
+              <h4 className="text-base font-bold text-surface-900 mb-2 transition-colors duration-300 group-hover:text-primary-600">Upload</h4>
               <p className="text-sm text-surface-500 leading-relaxed">
                 Upload macroscopic Petri dish photos (JPEG, JPG, or PNG) in batches of up to 10 images per project.
               </p>
             </div>
 
             {/* Step 2 */}
-            <div className="relative text-left">
-              <div className="text-3xl font-extrabold text-accent-400 mb-2">02</div>
-              <h4 className="text-base font-bold text-surface-900 mb-2">Detect</h4>
+            <div className="fade-in-up animation-delay-75 relative text-left group cursor-pointer hover:-translate-y-2 transition-transform duration-300">
+              <div className="text-3xl font-extrabold text-accent-400 mb-2 transition-colors duration-300 group-hover:text-primary-500">02</div>
+              <h4 className="text-base font-bold text-surface-900 mb-2 transition-colors duration-300 group-hover:text-primary-600">Detect</h4>
               <p className="text-sm text-surface-500 leading-relaxed">
                 SOD-YOLOv8 deep learning model rapidly identifies, localizes, and counts colony forming units in seconds.
               </p>
             </div>
 
             {/* Step 3 */}
-            <div className="relative text-left">
-              <div className="text-3xl font-extrabold text-accent-400 mb-2">03</div>
-              <h4 className="text-base font-bold text-surface-900 mb-2">Verify</h4>
+            <div className="fade-in-up animation-delay-150 relative text-left group cursor-pointer hover:-translate-y-2 transition-transform duration-300">
+              <div className="text-3xl font-extrabold text-accent-400 mb-2 transition-colors duration-300 group-hover:text-primary-500">03</div>
+              <h4 className="text-base font-bold text-surface-900 mb-2 transition-colors duration-300 group-hover:text-primary-600">Verify</h4>
               <p className="text-sm text-surface-500 leading-relaxed">
                 Review automated detections on the interactive canvas. Add, resize, or delete bounding boxes with confidence scores.
               </p>
             </div>
 
             {/* Step 4 */}
-            <div className="relative text-left">
-              <div className="text-3xl font-extrabold text-accent-400 mb-2">04</div>
-              <h4 className="text-base font-bold text-surface-900 mb-2">Export</h4>
+            <div className="fade-in-up animation-delay-225 relative text-left group cursor-pointer hover:-translate-y-2 transition-transform duration-300">
+              <div className="text-3xl font-extrabold text-accent-400 mb-2 transition-colors duration-300 group-hover:text-primary-500">04</div>
+              <h4 className="text-base font-bold text-surface-900 mb-2 transition-colors duration-300 group-hover:text-primary-600">Export</h4>
               <p className="text-sm text-surface-500 leading-relaxed">
                 Download structured CSV files formatted for SPSS/R or generate academic PDF summary reports for thesis panels.
               </p>
@@ -234,81 +234,81 @@ export default function AboutPage() {
 
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 lg:gap-8">
             {/* Capability 1 */}
-            <div className="bg-white rounded-xl border border-surface-200 p-6 shadow-xs">
-              <div className="w-10 h-10 rounded-lg bg-primary-50 text-primary-600 flex items-center justify-center font-bold mb-4">
+            <div className="fade-in-up bg-white rounded-xl border border-surface-200 p-6 shadow-xs group cursor-pointer hover:-translate-y-2 transition-all duration-300 hover:shadow-lg hover:border-primary-200">
+              <div className="w-10 h-10 rounded-lg bg-primary-50 text-primary-600 flex items-center justify-center font-bold mb-4 transition-colors duration-300 group-hover:bg-primary-600 group-hover:text-white">
                 <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="2">
                   <circle cx="12" cy="12" r="3" />
                   <path strokeLinecap="round" strokeLinejoin="round" d="M12 2a10 10 0 0 1 10 10" />
                   <path strokeLinecap="round" strokeLinejoin="round" d="M2 12a10 10 0 0 0 10 10" />
                 </svg>
               </div>
-              <h4 className="text-base font-bold text-surface-900 mb-2">AI Colony Detection</h4>
+              <h4 className="text-base font-bold text-surface-900 mb-2 transition-colors duration-300 group-hover:text-primary-600">AI Colony Detection</h4>
               <p className="text-sm text-surface-500 leading-relaxed">
                 Small-object optimized YOLOv8 model achieves 80%+ target detection F1 across clear agar, nutrient agar, and diverse lighting.
               </p>
             </div>
 
             {/* Capability 2 */}
-            <div className="bg-white rounded-xl border border-surface-200 p-6 shadow-xs">
-              <div className="w-10 h-10 rounded-lg bg-primary-50 text-primary-600 flex items-center justify-center font-bold mb-4">
+            <div className="fade-in-up animation-delay-75 bg-white rounded-xl border border-surface-200 p-6 shadow-xs group cursor-pointer hover:-translate-y-2 transition-all duration-300 hover:shadow-lg hover:border-primary-200">
+              <div className="w-10 h-10 rounded-lg bg-primary-50 text-primary-600 flex items-center justify-center font-bold mb-4 transition-colors duration-300 group-hover:bg-primary-600 group-hover:text-white">
                 <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="2">
                   <path strokeLinecap="round" strokeLinejoin="round" d="m16.862 4.487 1.687-1.688a1.875 1.875 0 1 1 2.652 2.652L6.832 19.82a4.5 4.5 0 0 1-1.897 1.13l-2.685.8.8-2.685a4.5 4.5 0 0 1 1.13-1.897L16.863 4.487Z" />
                 </svg>
               </div>
-              <h4 className="text-base font-bold text-surface-900 mb-2">Human-in-the-Loop Annotation</h4>
+              <h4 className="text-base font-bold text-surface-900 mb-2 transition-colors duration-300 group-hover:text-primary-600">Human-in-the-Loop Annotation</h4>
               <p className="text-sm text-surface-500 leading-relaxed">
                 Interactive canvas tools allow researchers to manually add missed colonies, adjust spatial boundaries, and delete false positives.
               </p>
             </div>
 
             {/* Capability 3 */}
-            <div className="bg-white rounded-xl border border-surface-200 p-6 shadow-xs">
-              <div className="w-10 h-10 rounded-lg bg-primary-50 text-primary-600 flex items-center justify-center font-bold mb-4">
+            <div className="fade-in-up animation-delay-150 bg-white rounded-xl border border-surface-200 p-6 shadow-xs group cursor-pointer hover:-translate-y-2 transition-all duration-300 hover:shadow-lg hover:border-primary-200">
+              <div className="w-10 h-10 rounded-lg bg-primary-50 text-primary-600 flex items-center justify-center font-bold mb-4 transition-colors duration-300 group-hover:bg-primary-600 group-hover:text-white">
                 <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="2">
                   <path strokeLinecap="round" strokeLinejoin="round" d="M12 6v12m-8-6h16" />
                   <circle cx="12" cy="12" r="9" />
                 </svg>
               </div>
-              <h4 className="text-base font-bold text-surface-900 mb-2">Morphological Measurement</h4>
+              <h4 className="text-base font-bold text-surface-900 mb-2 transition-colors duration-300 group-hover:text-primary-600">Morphological Measurement</h4>
               <p className="text-sm text-surface-500 leading-relaxed">
                 Spatial calibration converts pixel measurements to millimeters (mm), calculating colony diameter, surface area, and circularity.
               </p>
             </div>
 
             {/* Capability 4 */}
-            <div className="bg-white rounded-xl border border-surface-200 p-6 shadow-xs">
-              <div className="w-10 h-10 rounded-lg bg-primary-50 text-primary-600 flex items-center justify-center font-bold mb-4">
+            <div className="fade-in-up animation-delay-225 bg-white rounded-xl border border-surface-200 p-6 shadow-xs group cursor-pointer hover:-translate-y-2 transition-all duration-300 hover:shadow-lg hover:border-primary-200">
+              <div className="w-10 h-10 rounded-lg bg-primary-50 text-primary-600 flex items-center justify-center font-bold mb-4 transition-colors duration-300 group-hover:bg-primary-600 group-hover:text-white">
                 <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="2">
                   <path strokeLinecap="round" strokeLinejoin="round" d="M2.25 12.75V12A2.25 2.25 0 0 1 4.5 9.75h15A2.25 2.25 0 0 1 21.75 12v.75m-8.69-6.44-2.12-2.12a1.5 1.5 0 0 0-1.061-.44H4.5A2.25 2.25 0 0 0 2.25 6v12a2.25 2.25 0 0 0 2.25 2.25h15A2.25 2.25 0 0 0 21.75 18V9a2.25 2.25 0 0 0-2.25-2.25h-5.379a1.5 1.5 0 0 1-1.06-.44Z" />
                 </svg>
               </div>
-              <h4 className="text-base font-bold text-surface-900 mb-2">Multi-Tenant Project Isolation</h4>
+              <h4 className="text-base font-bold text-surface-900 mb-2 transition-colors duration-300 group-hover:text-primary-600">Multi-Tenant Project Isolation</h4>
               <p className="text-sm text-surface-500 leading-relaxed">
                 Laboratory groups operate in isolated tenant workspaces with role-based access control for students, advisers, and administrators.
               </p>
             </div>
 
             {/* Capability 5 */}
-            <div className="bg-white rounded-xl border border-surface-200 p-6 shadow-xs">
-              <div className="w-10 h-10 rounded-lg bg-primary-50 text-primary-600 flex items-center justify-center font-bold mb-4">
+            <div className="fade-in-up animation-delay-300 bg-white rounded-xl border border-surface-200 p-6 shadow-xs group cursor-pointer hover:-translate-y-2 transition-all duration-300 hover:shadow-lg hover:border-primary-200">
+              <div className="w-10 h-10 rounded-lg bg-primary-50 text-primary-600 flex items-center justify-center font-bold mb-4 transition-colors duration-300 group-hover:bg-primary-600 group-hover:text-white">
                 <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="2">
                   <path strokeLinecap="round" strokeLinejoin="round" d="M9 12.75 11.25 15 15 9.75M21 12a9 9 0 1 1-18 0 9 9 0 0 1 18 0Z" />
                 </svg>
               </div>
-              <h4 className="text-base font-bold text-surface-900 mb-2">Faculty Review & Verification</h4>
+              <h4 className="text-base font-bold text-surface-900 mb-2 transition-colors duration-300 group-hover:text-primary-600">Faculty Review & Verification</h4>
               <p className="text-sm text-surface-500 leading-relaxed">
                 Advisers review student submissions with confidence metrics, approve completed datasets, or request re-annotation with audit trails.
               </p>
             </div>
 
             {/* Capability 6 */}
-            <div className="bg-white rounded-xl border border-surface-200 p-6 shadow-xs">
-              <div className="w-10 h-10 rounded-lg bg-primary-50 text-primary-600 flex items-center justify-center font-bold mb-4">
+            <div className="fade-in-up animation-delay-375 bg-white rounded-xl border border-surface-200 p-6 shadow-xs group cursor-pointer hover:-translate-y-2 transition-all duration-300 hover:shadow-lg hover:border-primary-200">
+              <div className="w-10 h-10 rounded-lg bg-primary-50 text-primary-600 flex items-center justify-center font-bold mb-4 transition-colors duration-300 group-hover:bg-primary-600 group-hover:text-white">
                 <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="2">
                   <path strokeLinecap="round" strokeLinejoin="round" d="M3 16.5v2.25A2.25 2.25 0 0 0 5.25 21h13.5A2.25 2.25 0 0 0 21 18.75V16.5M16.5 12 12 16.5m0 0L7.5 12m4.5 4.5V3" />
                 </svg>
               </div>
-              <h4 className="text-base font-bold text-surface-900 mb-2">One-Click Structured Export</h4>
+              <h4 className="text-base font-bold text-surface-900 mb-2 transition-colors duration-300 group-hover:text-primary-600">One-Click Structured Export</h4>
               <p className="text-sm text-surface-500 leading-relaxed">
                 Export raw counts, CFU/mL calculations, and morphological parameters directly to CSV formatted for SPSS, GraphPad Prism, and R.
               </p>
@@ -334,12 +334,12 @@ export default function AboutPage() {
 
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
             {/* Student Card */}
-            <div className="bg-surface-50 rounded-2xl border border-surface-200 p-8 sm:p-10 flex flex-col justify-between">
+            <div className="fade-in-up bg-surface-50 rounded-2xl border border-surface-200 p-8 sm:p-10 flex flex-col justify-between group hover:-translate-y-2 transition-all duration-300 hover:shadow-xl hover:border-primary-300">
               <div>
-                <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-primary-100 text-primary-900 text-xs font-bold mb-4">
+                <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-primary-100 text-primary-900 text-xs font-bold mb-4 transition-colors duration-300 group-hover:bg-primary-600 group-hover:text-white">
                   For Students & Thesis Groups
                 </div>
-                <h4 className="text-xl font-bold text-surface-900 mb-3">
+                <h4 className="text-xl font-bold text-surface-900 mb-3 transition-colors duration-300 group-hover:text-primary-600">
                   Biology Students & Thesis Researchers
                 </h4>
                 <p className="text-sm text-surface-600 leading-relaxed mb-6">
@@ -348,24 +348,24 @@ export default function AboutPage() {
 
                 <ul className="space-y-3 text-xs sm:text-sm text-surface-700">
                   <li className="flex items-start gap-2.5">
-                    <span className="w-5 h-5 rounded-full bg-accent-400/20 text-accent-600 flex items-center justify-center flex-shrink-0 mt-0.5 font-bold">✓</span>
+                    <span className="w-5 h-5 rounded-full bg-accent-400/20 text-accent-600 flex items-center justify-center flex-shrink-0 mt-0.5 font-bold transition-colors duration-300 group-hover:bg-accent-400 group-hover:text-[#0B1F3A]">✓</span>
                     <span>Upload batch Petri dish photos with automatic spatial scale calibration.</span>
                   </li>
                   <li className="flex items-start gap-2.5">
-                    <span className="w-5 h-5 rounded-full bg-accent-400/20 text-accent-600 flex items-center justify-center flex-shrink-0 mt-0.5 font-bold">✓</span>
+                    <span className="w-5 h-5 rounded-full bg-accent-400/20 text-accent-600 flex items-center justify-center flex-shrink-0 mt-0.5 font-bold transition-colors duration-300 group-hover:bg-accent-400 group-hover:text-[#0B1F3A]">✓</span>
                     <span>Review AI detections on an interactive canvas with fine-grained zoom and pan.</span>
                   </li>
                   <li className="flex items-start gap-2.5">
-                    <span className="w-5 h-5 rounded-full bg-accent-400/20 text-accent-600 flex items-center justify-center flex-shrink-0 mt-0.5 font-bold">✓</span>
+                    <span className="w-5 h-5 rounded-full bg-accent-400/20 text-accent-600 flex items-center justify-center flex-shrink-0 mt-0.5 font-bold transition-colors duration-300 group-hover:bg-accent-400 group-hover:text-[#0B1F3A]">✓</span>
                     <span>Export structured data files ready for thesis statistical software packages.</span>
                   </li>
                 </ul>
               </div>
 
-              <div className="mt-8 pt-6 border-t border-surface-200">
+              <div className="mt-8 pt-6 border-t border-surface-200 transition-colors duration-300 group-hover:border-primary-100">
                 <Link
                   to={ROUTES.AUTH.REGISTER}
-                  className="text-sm font-semibold text-primary-600 hover:text-primary-700 inline-flex items-center gap-1.5"
+                  className="text-sm font-semibold text-primary-600 hover:text-primary-700 inline-flex items-center gap-1.5 transition-transform duration-300 group-hover:translate-x-1"
                 >
                   Create student account →
                 </Link>
@@ -373,12 +373,12 @@ export default function AboutPage() {
             </div>
 
             {/* Faculty Card */}
-            <div className="bg-surface-50 rounded-2xl border border-surface-200 p-8 sm:p-10 flex flex-col justify-between">
+            <div className="fade-in-up animation-delay-75 bg-surface-50 rounded-2xl border border-surface-200 p-8 sm:p-10 flex flex-col justify-between group hover:-translate-y-2 transition-all duration-300 hover:shadow-xl hover:border-primary-300">
               <div>
-                <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-primary-100 text-primary-900 text-xs font-bold mb-4">
+                <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-primary-100 text-primary-900 text-xs font-bold mb-4 transition-colors duration-300 group-hover:bg-primary-600 group-hover:text-white">
                   For Advisers & Panelists
                 </div>
-                <h4 className="text-xl font-bold text-surface-900 mb-3">
+                <h4 className="text-xl font-bold text-surface-900 mb-3 transition-colors duration-300 group-hover:text-primary-600">
                   Faculty Advisers & Reviewers
                 </h4>
                 <p className="text-sm text-surface-600 leading-relaxed mb-6">
@@ -387,24 +387,24 @@ export default function AboutPage() {
 
                 <ul className="space-y-3 text-xs sm:text-sm text-surface-700">
                   <li className="flex items-start gap-2.5">
-                    <span className="w-5 h-5 rounded-full bg-primary-600 text-white flex items-center justify-center flex-shrink-0 mt-0.5 text-xs font-bold">✓</span>
+                    <span className="w-5 h-5 rounded-full bg-primary-600 text-white flex items-center justify-center flex-shrink-0 mt-0.5 text-xs font-bold transition-all duration-300 group-hover:bg-accent-400 group-hover:text-[#0B1F3A]">✓</span>
                     <span>Audit student annotations directly on plate images with detection confidence filters.</span>
                   </li>
                   <li className="flex items-start gap-2.5">
-                    <span className="w-5 h-5 rounded-full bg-primary-600 text-white flex items-center justify-center flex-shrink-0 mt-0.5 text-xs font-bold">✓</span>
+                    <span className="w-5 h-5 rounded-full bg-primary-600 text-white flex items-center justify-center flex-shrink-0 mt-0.5 text-xs font-bold transition-all duration-300 group-hover:bg-accent-400 group-hover:text-[#0B1F3A]">✓</span>
                     <span>Approve completed datasets or request specific re-annotation with audit timestamps.</span>
                   </li>
                   <li className="flex items-start gap-2.5">
-                    <span className="w-5 h-5 rounded-full bg-primary-600 text-white flex items-center justify-center flex-shrink-0 mt-0.5 text-xs font-bold">✓</span>
+                    <span className="w-5 h-5 rounded-full bg-primary-600 text-white flex items-center justify-center flex-shrink-0 mt-0.5 text-xs font-bold transition-all duration-300 group-hover:bg-accent-400 group-hover:text-[#0B1F3A]">✓</span>
                     <span>Ensure isolated multi-tenant data governance across multiple thesis advisory groups.</span>
                   </li>
                 </ul>
               </div>
 
-              <div className="mt-8 pt-6 border-t border-surface-200">
+              <div className="mt-8 pt-6 border-t border-surface-200 transition-colors duration-300 group-hover:border-primary-100">
                 <Link
                   to={ROUTES.AUTH.LOGIN}
-                  className="text-sm font-semibold text-primary-600 hover:text-primary-700 inline-flex items-center gap-1.5"
+                  className="text-sm font-semibold text-primary-600 hover:text-primary-700 inline-flex items-center gap-1.5 transition-transform duration-300 group-hover:translate-x-1"
                 >
                   Sign in to workspace →
                 </Link>

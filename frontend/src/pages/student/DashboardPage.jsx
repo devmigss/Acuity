@@ -15,6 +15,7 @@ import { useState } from 'react'
 import PageHeader from '@/components/layout/PageHeader'
 import Card from '@/components/ui/Card'
 import Button from '@/components/ui/Button'
+import { useToastStore } from '@/store/useToastStore'
 
 // Mock Demonstration Data for Active Trial
 const TRIAL_CONTEXT = {
@@ -76,7 +77,7 @@ export default function DashboardPage() {
   }
 
   const handleOpenCanvas = (plateId) => {
-    alert(`Opening Interactive Annotation Canvas for plate: ${plateId} (React Konva workspace placeholder)`)
+    useToastStore.getState().addToast(`Opening Interactive Annotation Canvas for plate: ${plateId} (React Konva workspace placeholder)`)
   }
 
   return (

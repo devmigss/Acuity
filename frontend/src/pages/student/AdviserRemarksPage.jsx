@@ -6,6 +6,7 @@
 
 import PageHeader from '@/components/layout/PageHeader'
 import Card from '@/components/ui/Card'
+import { useToastStore } from '@/store/useToastStore'
 
 const MOCK_REMARKS = [
   {
@@ -53,7 +54,7 @@ export default function AdviserRemarksPage() {
             <div className="pt-3 border-t border-surface-100 flex justify-end">
               <button
                 type="button"
-                onClick={() => alert(`Navigating to canvas review for ${remark.plateRef}`)}
+                onClick={() => useToastStore.getState().addToast(`Navigating to canvas review for ${remark.plateRef}`)}
                 className="text-xs font-semibold text-primary-600 hover:text-primary-800 underline cursor-pointer"
               >
                 Open Plate in Annotation Canvas →

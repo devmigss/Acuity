@@ -6,6 +6,7 @@
 
 import PageHeader from '@/components/layout/PageHeader'
 import Card from '@/components/ui/Card'
+import { useToastStore } from '@/store/useToastStore'
 
 export default function FacultyOverviewPage() {
   return (
@@ -72,7 +73,7 @@ export default function FacultyOverviewPage() {
             </div>
             <button
               type="button"
-              onClick={() => alert('Opening Faculty Review Canvas')}
+              onClick={() => useToastStore.getState().addToast('Opening Faculty Review Canvas')}
               className="inline-flex items-center justify-center px-4 py-2 text-xs font-semibold rounded-lg bg-primary-600 text-white hover:bg-primary-700 transition-colors cursor-pointer"
             >
               Start Review →
@@ -90,7 +91,7 @@ export default function FacultyOverviewPage() {
             </div>
             <button
               type="button"
-              onClick={() => alert('Opening Faculty Review Canvas')}
+              onClick={() => useToastStore.getState().addToast('Opening Faculty Review Canvas')}
               className="inline-flex items-center justify-center px-4 py-2 text-xs font-semibold rounded-lg bg-primary-600 text-white hover:bg-primary-700 transition-colors cursor-pointer"
             >
               Start Review →

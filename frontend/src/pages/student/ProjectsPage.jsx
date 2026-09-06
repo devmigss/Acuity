@@ -9,6 +9,7 @@ import { Link } from 'react-router-dom'
 import PageHeader from '@/components/layout/PageHeader'
 import Card from '@/components/ui/Card'
 import Button from '@/components/ui/Button'
+import { useToastStore } from '@/store/useToastStore'
 
 const MOCK_PROJECTS = [
   {
@@ -53,7 +54,7 @@ export default function ProjectsPage() {
         <Button
           type="button"
           variant="primary"
-          onClick={() => alert('New Research Project modal placeholder.')}
+          onClick={() => useToastStore.getState().addToast('New Research Project modal placeholder.')}
         >
           + New Project
         </Button>

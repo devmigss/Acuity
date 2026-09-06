@@ -7,6 +7,7 @@
 import PageHeader from '@/components/layout/PageHeader'
 import Card from '@/components/ui/Card'
 import Button from '@/components/ui/Button'
+import { useToastStore } from '@/store/useToastStore'
 
 export default function ContentManagementPage() {
   return (
@@ -19,7 +20,7 @@ export default function ContentManagementPage() {
         <Button
           type="button"
           variant="primary"
-          onClick={() => alert('New Notice broadcast placeholder')}
+          onClick={() => useToastStore.getState().addToast('New Notice broadcast placeholder')}
         >
           + Publish Platform Notice
         </Button>
@@ -36,7 +37,7 @@ export default function ContentManagementPage() {
           </div>
           <button
             type="button"
-            onClick={() => alert('Editing notice')}
+            onClick={() => useToastStore.getState().addToast('Editing notice')}
             className="text-xs font-semibold text-primary-700 hover:text-primary-900 underline shrink-0 cursor-pointer"
           >
             Edit
