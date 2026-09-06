@@ -33,6 +33,7 @@ export const ROUTES = {
     WORKSPACE: '/student/projects/:projectId/workspace/:plateId',
     WORKSPACE_BASE: '/student/projects/:projectId/workspace',
     ANNOTATION: '/student/projects/:projectId/annotation',
+    ANNOTATION_WORKSPACE: '/student/projects/:projectId/annotate/:plateId',
     EXPORT: '/student/projects/:projectId/export',
   },
 

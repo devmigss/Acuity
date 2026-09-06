@@ -6,7 +6,9 @@
     "backend/node-api"
   ],
   "scripts": {
-    "start:frontend": "npm run start --workspace=frontend",
+    "dev": "npm run dev --workspace=frontend",
+    "dev:frontend": "npm run dev --workspace=frontend",
+    "start:frontend": "npm run dev --workspace=frontend",
     "start:api": "npm run start --workspace=backend/node-api",
     "install:all": "npm install"
   }

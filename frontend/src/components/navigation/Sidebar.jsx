@@ -131,12 +131,12 @@ export default function Sidebar({ isOpen, onClose }) {
           fixed top-16 bottom-0 left-0 z-40 w-64 bg-white border-r border-surface-200
           flex flex-col justify-between py-5 px-3.5
           transition-transform duration-200 ease-in-out
-          lg:translate-x-0 lg:static lg:top-0 lg:min-h-[calc(100vh-4rem)]
+          lg:translate-x-0 lg:static lg:h-full lg:shrink-0
           ${isOpen ? 'translate-x-0' : '-translate-x-full'}
         `}
         aria-label="Dashboard sidebar"
       >
-        <div className="flex flex-col flex-1 overflow-y-auto">
+        <div className="flex flex-col flex-1 overflow-y-auto min-h-0">
           {/* User Profile Info Header (Matching Reference Design) */}
           <div className="flex items-center gap-3 px-2 pb-4 mb-4 border-b border-surface-200/80">
             {user?.avatar ? (
@@ -258,7 +258,7 @@ export default function Sidebar({ isOpen, onClose }) {
         </div>
 
         {/* Bottom Section with Divider (Support & Logout) */}
-        <div className="pt-4 mt-4 border-t border-surface-200/80 space-y-1">
+        <div className="pt-4 mt-4 border-t border-surface-200/80 space-y-1 shrink-0">
           <button
             type="button"
             onClick={() => {

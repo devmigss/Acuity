@@ -32,6 +32,7 @@ import SettingsPage from '@/pages/settings/SettingsPage'
 // Student Pages
 import StudentDashboardPage from '@/pages/student/DashboardPage'
 import StudentProjectsPage from '@/pages/student/ProjectsPage'
+import StudentProjectDetailPage from '@/pages/student/ProjectDetailPage'
 import StudentSharedProjectsPage from '@/pages/student/SharedProjectsPage'
 import StudentAdviserRemarksPage from '@/pages/student/AdviserRemarksPage'
 import AnnotationWorkspacePage from '@/pages/student/AnnotationWorkspace'
@@ -109,8 +110,10 @@ export default function AppRoutes() {
           <Route element={<ProtectedRoute allowedRoles={[ROLES.STUDENT]} />}>
             <Route path={ROUTES.STUDENT.DASHBOARD} element={<StudentDashboardPage />} />
             <Route path={ROUTES.STUDENT.PROJECTS} element={<StudentProjectsPage />} />
+            <Route path={ROUTES.STUDENT.PROJECT_DETAIL} element={<StudentProjectDetailPage />} />
             <Route path={ROUTES.STUDENT.SHARED} element={<StudentSharedProjectsPage />} />
             <Route path={ROUTES.STUDENT.ADVISER_REMARKS} element={<StudentAdviserRemarksPage />} />
+            <Route path={ROUTES.STUDENT.ANNOTATION_WORKSPACE} element={<AnnotationWorkspacePage />} />
             <Route path={ROUTES.STUDENT.WORKSPACE} element={<AnnotationWorkspacePage />} />
             {/* Redirect /workspace (no plateId) to projects for safety */}
             <Route path={ROUTES.STUDENT.WORKSPACE_BASE} element={<Navigate to={ROUTES.STUDENT.PROJECTS} replace />} />

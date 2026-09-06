@@ -1,11 +1,14 @@
 /**
  * Acuity — Student Annotation Workspace Page
  *
- * Route: /student/projects/:projectId/workspace
+ * Route: /student/projects/:projectId/annotate/:plateId
  *
  * The primary interface for reviewing AI-detected bacterial colonies,
  * performing human-in-the-loop annotation corrections, adjusting confidence
  * thresholds, and submitting verified results for faculty review.
+ *
+ * CONNECTED: Loads plate data from useProjectStore, annotations via the
+ * annotation bridge. Save/submit actions persist changes back to the store.
  *
  * IMPORTANT ARCHITECTURAL NOTES:
  * - This is FRONTEND ONLY. No backend, S3, or AI integration yet.
@@ -17,26 +20,21 @@
  * - Annotation state is managed by Zustand (annotationStore.js).
  */
 
-import { useState, useCallback, useEffect } from 'react'
-import { useParams, Link } from 'react-router-dom'
+import { useState, useCallback, useEffect, useMemo } from 'react'
+import { useParams, Link, useNavigate, useSearchParams, useLocation } from 'react-router-dom'
 import { ROUTES } from '@/routes/routeConstants'
 import { useAnnotationStore } from '@/stores/annotationStore'
+import { useProjectStore } from '@/stores/useProjectStore'
 
 import AnnotationCanvas from '@/components/annotation/AnnotationCanvas'
 import AnnotationToolbar from '@/components/annotation/AnnotationToolbar'
 import DetectionSummary from '@/components/annotation/DetectionSummary'
 import ConfidenceThreshold from '@/components/annotation/ConfidenceThreshold'
 import AnnotationLegend from '@/components/annotation/AnnotationLegend'
+import SelectedColonyInspector from '@/components/annotation/SelectedColonyInspector'
 import Button from '@/components/ui/Button'
-
-// Mock plate metadata — will be replaced by backend-provided data
-const MOCK_PLATE = {
-  trialLabel: 'Trial 4 — Control Group / Plate 07',
-  plateId: 'P07',
-  fileName: 'IMG_0091.jpg',
-  uploadedAt: '12:04 PM',
-  projectName: 'Antimicrobial Efficacy of Psidium guajava Extracts',
-}
+import Card from '@/components/ui/Card'
+import Modal from '@/components/ui/Modal'
 
 const TABS = [
   { id: 'image-upload', label: 'Image Upload' },
@@ -44,12 +42,38 @@ const TABS = [
 ]
 
 export default function AnnotationWorkspace() {
-  const { projectId } = useParams()
+  const { projectId, plateId } = useParams()
+  const navigate = useNavigate()
+  const [searchParams] = useSearchParams()
+  const location = useLocation()
+
+  const fromTab = searchParams.get('fromTab') || location.state?.fromTab || 'plates'
+  const returnTabLabel = fromTab === 'data' ? 'Data' : 'Plates / Images'
+  const returnPath = `/student/projects/${projectId}?tab=${fromTab}`
+
   const [activeTab, setActiveTab] = useState('image-upload')
   const [toast, setToast] = useState(null)
 
-  const { zoom, setZoom, stageOffset, setStageOffset, resetView, saveDraft, submitForReview, isDirty, isSubmitted } =
+  // Get project and plate data from centralized store
+  const projects = useProjectStore((s) => s.projects)
+  const plates = useProjectStore((s) => s.plates)
+  const getAnnotationsForPlate = useProjectStore((s) => s.getAnnotationsForPlate)
+  const saveAnnotationsForPlate = useProjectStore((s) => s.saveAnnotationsForPlate)
+
+  const project = useMemo(() => projects.find((p) => p.id === projectId) || null, [projects, projectId])
+  const plate = useMemo(() => plates.find((p) => p.id === plateId) || null, [plates, plateId])
+
+  const { zoom, setZoom, stageOffset, setStageOffset, resetView, isDirty, isSubmitted,
+    loadAnnotationsForPlate: loadIntoCanvas, getAnnotationSnapshot } =
     useAnnotationStore()
+
+  // Load plate-specific annotations when the component mounts or plateId changes
+  useEffect(() => {
+    if (plateId) {
+      const annotations = getAnnotationsForPlate(plateId)
+      loadIntoCanvas(annotations)
+    }
+  }, [plateId, getAnnotationsForPlate, loadIntoCanvas])
 
   const showToast = useCallback((message, type = 'success') => {
     setToast({ message, type })
@@ -73,7 +97,7 @@ export default function AnnotationWorkspace() {
   }, [resetView])
 
   // ── Keyboard shortcuts for tools ──
-  const { setActiveTool, selectedAnnotationId, deleteAnnotation } = useAnnotationStore()
+  const { setActiveTool, selectedAnnotationId, deleteAnnotation, clearSelection } = useAnnotationStore()
   useEffect(() => {
     const handler = (e) => {
       // Don't fire when typing in inputs
@@ -83,6 +107,9 @@ export default function AnnotationWorkspace() {
         case 'h': setActiveTool('pan');    break
         case 'a': setActiveTool('add');    break
         case 'r': setActiveTool('resize'); break
+        case 'escape':
+          clearSelection()
+          break
         case 'delete':
         case 'backspace':
           if (selectedAnnotationId) {
@@ -100,18 +127,46 @@ export default function AnnotationWorkspace() {
     }
     window.addEventListener('keydown', handler)
     return () => window.removeEventListener('keydown', handler)
-  }, [setActiveTool, selectedAnnotationId, deleteAnnotation, resetView, handleZoomIn, handleZoomOut])
+  }, [setActiveTool, selectedAnnotationId, deleteAnnotation, clearSelection, resetView, handleZoomIn, handleZoomOut])
 
   const handleSaveDraft = useCallback(() => {
-    saveDraft()
+    // Persist annotations back to the project store
+    if (plateId) {
+      const snapshot = getAnnotationSnapshot()
+      saveAnnotationsForPlate(plateId, snapshot)
+    }
+    useAnnotationStore.getState().saveDraft()
     showToast('Draft saved successfully. Your annotations are stored locally.')
-  }, [saveDraft, showToast])
+  }, [plateId, getAnnotationSnapshot, saveAnnotationsForPlate, showToast])
 
   const handleSubmitForReview = useCallback(() => {
     if (isSubmitted) return
-    submitForReview()
+    // Persist annotations back to the project store
+    if (plateId) {
+      const snapshot = getAnnotationSnapshot()
+      saveAnnotationsForPlate(plateId, snapshot)
+    }
+    useAnnotationStore.getState().submitForReview()
     showToast('Submitted for faculty adviser review. You will be notified when feedback is available.', 'info')
-  }, [submitForReview, isSubmitted, showToast])
+  }, [isSubmitted, plateId, getAnnotationSnapshot, saveAnnotationsForPlate, showToast])
+
+  // Handle missing project or plate
+  if (!project || !plate) {
+    return (
+      <div className="space-y-6">
+        <div className="mb-5">
+          <nav className="flex items-center gap-1.5 text-xs text-surface-400 mb-3" aria-label="Breadcrumb">
+            <Link to={ROUTES.STUDENT.PROJECTS} className="hover:text-primary-700 transition-colors">My Projects</Link>
+          </nav>
+          <h1 className="text-xl font-bold text-surface-900">Plate Not Found</h1>
+          <p className="text-sm text-surface-500 mt-1">The plate or project you're looking for does not exist.</p>
+        </div>
+        <Button variant="secondary" onClick={() => navigate(projectId ? returnPath : ROUTES.STUDENT.PROJECTS)}>
+          ← Back to {projectId ? returnTabLabel : 'Projects'}
+        </Button>
+      </div>
+    )
+  }
 
   return (
     <div className="space-y-0">
@@ -150,24 +205,41 @@ export default function AnnotationWorkspace() {
           <svg className="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="2">
             <path strokeLinecap="round" strokeLinejoin="round" d="M8.25 4.5l7.5 7.5-7.5 7.5" />
           </svg>
-          <span className="text-surface-600 font-medium truncate max-w-[200px]">
-            {MOCK_PLATE.projectName}
-          </span>
+          <Link
+            to={returnPath}
+            className="hover:text-primary-700 transition-colors truncate max-w-[200px]"
+            title={`Return to ${project.name} (${returnTabLabel})`}
+          >
+            {project.name}
+          </Link>
           <svg className="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="2">
             <path strokeLinecap="round" strokeLinejoin="round" d="M8.25 4.5l7.5 7.5-7.5 7.5" />
           </svg>
-          <span className="text-surface-500">Workspace</span>
+          <span className="text-surface-500">Annotation Canvas</span>
         </nav>
 
         <div className="flex flex-col sm:flex-row sm:items-start sm:justify-between gap-3">
           <div>
+            <div className="mb-1.5">
+              <button
+                type="button"
+                onClick={() => navigate(returnPath)}
+                className="inline-flex items-center gap-1.5 text-xs font-semibold text-primary-600 hover:text-primary-800 transition-colors cursor-pointer group"
+                aria-label={`Back to ${returnTabLabel}`}
+              >
+                <svg className="w-3.5 h-3.5 transition-transform group-hover:-translate-x-0.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="2.5">
+                  <path strokeLinecap="round" strokeLinejoin="round" d="M10.5 19.5L3 12m0 0l7.5-7.5M3 12h18" />
+                </svg>
+                <span>Back to {returnTabLabel}</span>
+              </button>
+            </div>
             <h1 className="text-xl sm:text-2xl font-bold text-surface-900 tracking-tight leading-tight">
-              {MOCK_PLATE.trialLabel}
+              {plate.fileName}
             </h1>
             <p className="mt-1 text-sm text-surface-500">
-              <span className="font-medium text-surface-700">{MOCK_PLATE.fileName}</span>
+              <span className="font-medium text-surface-700">{plate.colonyCount} colonies detected</span>
               {' · '}
-              <span>uploaded {MOCK_PLATE.uploadedAt}</span>
+              <span>uploaded {new Date(plate.uploadedAt).toLocaleTimeString('en-US', { hour: 'numeric', minute: '2-digit' })}</span>
               {isDirty && (
                 <span className="ml-2 inline-flex items-center gap-1 text-xs text-amber-600 font-semibold">
                   <span className="w-1.5 h-1.5 rounded-full bg-amber-500 animate-pulse" />
@@ -205,7 +277,7 @@ export default function AnnotationWorkspace() {
 
       {/* ── Tab Content ── */}
       {activeTab === 'data-view' ? (
-        <DataViewPlaceholder />
+        <DataViewPlaceholder plate={plate} />
       ) : (
         <ImageUploadTabContent
           zoom={zoom}
@@ -281,8 +353,9 @@ function ImageUploadTabContent({ zoom, onZoomIn, onZoomOut, onFitView, onSaveDra
         </div>
       </div>
 
-      {/* ── Right Sidebar: Summary + Threshold + Legend ── */}
+      {/* ── Right Sidebar: Inspector + Summary + Threshold + Legend ── */}
       <div className="xl:w-72 2xl:w-80 space-y-4 shrink-0">
+        <SelectedColonyInspector />
         <DetectionSummary />
         <ConfidenceThreshold />
         <AnnotationLegend />
@@ -292,10 +365,9 @@ function ImageUploadTabContent({ zoom, onZoomIn, onZoomOut, onFitView, onSaveDra
 }
 
 /**
- * Placeholder Data View tab content.
- * Full implementation deferred until the data view design is finalised.
+ * Data View tab — shows plate-specific analysis data.
  */
-function DataViewPlaceholder() {
+function DataViewPlaceholder({ plate }) {
   return (
     <div className="flex items-center justify-center py-24 rounded-xl border border-dashed border-surface-300 bg-surface-50">
       <div className="text-center max-w-sm">
@@ -306,7 +378,7 @@ function DataViewPlaceholder() {
         </div>
         <div className="text-base font-semibold text-surface-900">Data View</div>
         <p className="mt-1 text-sm text-surface-500">
-          Aggregated morphological data and colony statistics will be displayed here after faculty validation and data freeze.
+          Colony analysis data for <strong>{plate?.fileName}</strong> — {plate?.colonyCount} colonies, {plate?.confidence} confidence.
         </p>
         <p className="mt-3 text-xs text-surface-400">
           Measurements provided by the Python FastAPI / OpenCV microservice.

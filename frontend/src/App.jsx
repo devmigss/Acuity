@@ -9,6 +9,7 @@ import { BrowserRouter } from 'react-router-dom'
 import { AuthProvider } from '@/context/AuthContext'
 import AppRoutes from '@/routes/AppRoutes'
 import ToastContainer from '@/components/ui/ToastContainer'
+import ErrorBoundary from '@/components/common/ErrorBoundary'
 import { useScrollAnimation } from '@/hooks/useScrollAnimation'
 
 export default function App() {
@@ -17,8 +18,10 @@ export default function App() {
   return (
     <BrowserRouter>
       <AuthProvider>
-        <AppRoutes />
-        <ToastContainer />
+        <ErrorBoundary>
+          <AppRoutes />
+          <ToastContainer />
+        </ErrorBoundary>
       </AuthProvider>
     </BrowserRouter>
   )

@@ -27,7 +27,7 @@ export default function DashboardHeader({ isMobileMenuOpen, onToggleMobileMenu }
   const roleLabel = (user?.role && roleLabelMap[user.role]) || 'User'
 
   return (
-    <header className="sticky top-0 z-50 bg-[#0B1F3A] border-b border-[#05101E]/80 shadow-xs h-16">
+    <header className="sticky top-0 z-50 bg-[#0B1F3A] border-b border-[#05101E]/80 shadow-xs h-16 shrink-0">
       <div className="h-full px-4 sm:px-6 lg:px-8 flex items-center justify-between">
         {/* Left: Mobile Toggle & Acuity Brand */}
         <div className="flex items-center gap-3 sm:gap-4">

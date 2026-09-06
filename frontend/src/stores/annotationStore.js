@@ -40,18 +40,18 @@ export const ANNOTATION_SOURCE = {
  * provide real detections, coordinates, and confidence values later.
  */
 const MOCK_AI_ANNOTATIONS = [
-  { id: 'ai-01', x: 180, y: 90,  radius: 32, confidence: 0.94, source: ANNOTATION_SOURCE.AI,     softDeleted: false },
-  { id: 'ai-02', x: 320, y: 155, radius: 28, confidence: 0.91, source: ANNOTATION_SOURCE.AI,     softDeleted: false },
-  { id: 'ai-03', x: 430, y: 95,  radius: 30, confidence: 0.88, source: ANNOTATION_SOURCE.AI,     softDeleted: false },
-  { id: 'ai-04', x: 490, y: 290, radius: 26, confidence: 0.96, source: ANNOTATION_SOURCE.AI,     softDeleted: false },
-  { id: 'ai-05', x: 560, y: 190, radius: 29, confidence: 0.90, source: ANNOTATION_SOURCE.AI,     softDeleted: false },
-  { id: 'ai-06', x: 570, y: 355, radius: 27, confidence: 0.85, source: ANNOTATION_SOURCE.AI,     softDeleted: false },
-  { id: 'ai-07', x: 250, y: 330, radius: 31, confidence: 0.89, source: ANNOTATION_SOURCE.AI,     softDeleted: false },
-  { id: 'ai-08', x: 380, y: 390, radius: 28, confidence: 0.93, source: ANNOTATION_SOURCE.AI,     softDeleted: false },
-  { id: 'ai-09', x: 145, y: 250, radius: 25, confidence: 0.87, source: ANNOTATION_SOURCE.AI,     softDeleted: false },
-  { id: 'ai-10', x: 430, y: 270, radius: 30, confidence: 0.92, source: ANNOTATION_SOURCE.AI,     softDeleted: false },
+  { id: 'ai-01', x: 180, y: 90,  radius: 32, confidence: 0.94, source: ANNOTATION_SOURCE.AI, corrected: false, original: null, softDeleted: false, type: 'colony' },
+  { id: 'ai-02', x: 320, y: 155, radius: 28, confidence: 0.91, source: ANNOTATION_SOURCE.AI, corrected: false, original: null, softDeleted: false, type: 'colony' },
+  { id: 'ai-03', x: 430, y: 95,  radius: 30, confidence: 0.88, source: ANNOTATION_SOURCE.AI, corrected: false, original: null, softDeleted: false, type: 'colony' },
+  { id: 'ai-04', x: 490, y: 290, radius: 26, confidence: 0.96, source: ANNOTATION_SOURCE.AI, corrected: false, original: null, softDeleted: false, type: 'colony' },
+  { id: 'ai-05', x: 560, y: 190, radius: 29, confidence: 0.90, source: ANNOTATION_SOURCE.AI, corrected: false, original: null, softDeleted: false, type: 'colony' },
+  { id: 'ai-06', x: 570, y: 355, radius: 27, confidence: 0.85, source: ANNOTATION_SOURCE.AI, corrected: false, original: null, softDeleted: false, type: 'colony' },
+  { id: 'ai-07', x: 250, y: 330, radius: 31, confidence: 0.89, source: ANNOTATION_SOURCE.AI, corrected: false, original: null, softDeleted: false, type: 'colony' },
+  { id: 'ai-08', x: 380, y: 390, radius: 28, confidence: 0.93, source: ANNOTATION_SOURCE.AI, corrected: false, original: null, softDeleted: false, type: 'colony' },
+  { id: 'ai-09', x: 145, y: 250, radius: 25, confidence: 0.87, source: ANNOTATION_SOURCE.AI, corrected: false, original: null, softDeleted: false, type: 'colony' },
+  { id: 'ai-10', x: 430, y: 270, radius: 30, confidence: 0.92, source: ANNOTATION_SOURCE.AI, corrected: false, original: null, softDeleted: false, type: 'colony' },
   // A manually added demo annotation:
-  { id: 'manual-01', x: 265, y: 195, radius: 30, confidence: null, source: ANNOTATION_SOURCE.MANUAL, softDeleted: false },
+  { id: 'manual-01', x: 265, y: 195, radius: 30, confidence: null, source: ANNOTATION_SOURCE.MANUAL, corrected: false, original: null, softDeleted: false, type: 'colony' },
 ]
 
 /**
@@ -62,7 +62,7 @@ const MOCK_DETECTION_SUMMARY = {
   totalColonies: 37,
   avgAreaMm2: '2.4',
   avgDiameterMm: '1.8',
-  manualCorrections: 3,
+  manualCorrections: 1,
 }
 
 let _nextId = 100
@@ -89,16 +89,19 @@ export const useAnnotationStore = create((set, get) => ({
   clearSelection: () => set({ selectedAnnotationId: null }),
 
   // ── Add Manual Annotation ──
-  addAnnotation: (x, y) => {
+  addAnnotation: (x, y, radius = 28) => {
     const id = `manual-${_nextId++}`
     const newAnnotation = {
       id,
-      x,
-      y,
-      radius: 28,
+      x: Math.round(x * 10) / 10,
+      y: Math.round(y * 10) / 10,
+      radius: Math.round(radius * 10) / 10,
       confidence: null,
       source: ANNOTATION_SOURCE.MANUAL,
+      corrected: false,
+      original: null,
       softDeleted: false,
+      type: 'colony',
     }
     set((state) => ({
       annotations: [...state.annotations, newAnnotation],
@@ -111,14 +114,79 @@ export const useAnnotationStore = create((set, get) => ({
     }))
   },
 
-  // ── Resize / Move Annotation ──
+  // ── Resize / Move Annotation (Human-in-the-loop Correction) ──
   updateAnnotation: (id, updates) => {
-    set((state) => ({
-      annotations: state.annotations.map((a) =>
-        a.id === id ? { ...a, ...updates } : a
-      ),
-      isDirty: true,
-    }))
+    set((state) => {
+      const target = state.annotations.find((a) => a.id === id)
+      if (!target) return state
+
+      // Detect if geometric properties changed
+      const isGeometryChanged =
+        (updates.x !== undefined && Math.round(updates.x) !== Math.round(target.x)) ||
+        (updates.y !== undefined && Math.round(updates.y) !== Math.round(target.y)) ||
+        (updates.radius !== undefined && Math.round(updates.radius) !== Math.round(target.radius))
+
+      let newCorrected = target.corrected
+      let newOriginal = target.original
+      let correctionIncrement = 0
+
+      // If modifying an AI annotation for the first time, capture provenance snapshot
+      if (target.source === ANNOTATION_SOURCE.AI && isGeometryChanged && !target.corrected) {
+        newCorrected = true
+        newOriginal = {
+          x: target.x,
+          y: target.y,
+          radius: target.radius,
+          confidence: target.confidence,
+        }
+        correctionIncrement = 1
+      }
+
+      const updatedAnnotation = {
+        ...target,
+        ...updates,
+        // Always preserve original confidence unless explicitly changed
+        confidence: updates.confidence !== undefined ? updates.confidence : target.confidence,
+        corrected: newCorrected,
+        original: newOriginal,
+      }
+
+      return {
+        annotations: state.annotations.map((a) => (a.id === id ? updatedAnnotation : a)),
+        isDirty: true,
+        detectionSummary: {
+          ...state.detectionSummary,
+          manualCorrections: state.detectionSummary.manualCorrections + correctionIncrement,
+        },
+      }
+    })
+  },
+
+  // ── Revert AI Annotation to Baseline Detection ──
+  revertAnnotation: (id) => {
+    set((state) => {
+      const target = state.annotations.find((a) => a.id === id)
+      if (!target || !target.original) return state
+
+      const reverted = {
+        ...target,
+        x: target.original.x,
+        y: target.original.y,
+        radius: target.original.radius,
+        confidence: target.original.confidence,
+        corrected: false,
+        original: null,
+      }
+
+      return {
+        annotations: state.annotations.map((a) => (a.id === id ? reverted : a)),
+        isDirty: true,
+        detectionSummary: {
+          ...state.detectionSummary,
+          manualCorrections: Math.max(0, state.detectionSummary.manualCorrections - 1),
+        },
+      }
+    })
   },
 
   // ── Soft Delete (per architectural decision: AI baseline is immutable) ──
@@ -157,5 +225,35 @@ export const useAnnotationStore = create((set, get) => ({
       if (a.source === ANNOTATION_SOURCE.MANUAL) return true
       return a.confidence >= confidenceThreshold
     })
+  },
+
+  // ── Computed: Currently Selected Annotation ──
+  getSelectedAnnotation: () => {
+    const { annotations, selectedAnnotationId } = get()
+    if (!selectedAnnotationId) return null
+    return annotations.find((a) => a.id === selectedAnnotationId) || null
+  },
+
+  // ── Load annotations from project store for a specific plate ──
+  loadAnnotationsForPlate: (plateAnnotations) => {
+    set({
+      annotations: plateAnnotations && plateAnnotations.length > 0 ? plateAnnotations : [...MOCK_AI_ANNOTATIONS],
+      selectedAnnotationId: null,
+      activeTool: TOOLS.SELECT,
+      isDirty: false,
+      isSubmitted: false,
+      zoom: 1.0,
+      stageOffset: { x: 0, y: 0 },
+      detectionSummary: {
+        ...MOCK_DETECTION_SUMMARY,
+        totalColonies: plateAnnotations ? plateAnnotations.filter((a) => !a.softDeleted).length : MOCK_AI_ANNOTATIONS.filter((a) => !a.softDeleted).length,
+        manualCorrections: plateAnnotations ? plateAnnotations.filter((a) => a.source === 'manual' && !a.softDeleted).length : 1,
+      },
+    })
+  },
+
+  // ── Get current annotation snapshot for saving back to project store ──
+  getAnnotationSnapshot: () => {
+    return [...get().annotations]
   },
 }))
