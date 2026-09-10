@@ -19,8 +19,9 @@ import { Link, useNavigate } from 'react-router-dom'
 import { ROUTES } from '@/routes/routeConstants'
 import { useAuth } from '@/context/AuthContext'
 import {
-  validateFullName,
-  validateInstitutionalEmail,
+  validateFirstName,
+  validateLastName,
+  validateEmail,
   validatePassword,
   validateConfirmPassword,
 } from '@/utils/authValidation'
@@ -32,14 +33,17 @@ export default function RegisterPage() {
   const { registerUser } = useAuth()
 
   const [formData, setFormData] = useState({
-    fullName: '',
+    firstName: '',
+    lastName: '',
     email: '',
     password: '',
     confirmPassword: '',
+    agreeToTerms: false,
   })
 
   const [showPassword, setShowPassword] = useState(false)
   const [showConfirmPassword, setShowConfirmPassword] = useState(false)
+  const [isTermsModalOpen, setIsTermsModalOpen] = useState(false)
   const [errors, setErrors] = useState({})
   const [isLoading, setIsLoading] = useState(false)
 
@@ -66,10 +70,13 @@ export default function RegisterPage() {
   const validateForm = () => {
     const newErrors = {}
 
-    const nameError = validateFullName(formData.fullName)
-    if (nameError) newErrors.fullName = nameError
+    const firstNameError = validateFirstName(formData.firstName)
+    if (firstNameError) newErrors.firstName = firstNameError
 
-    const emailError = validateInstitutionalEmail(formData.email)
+    const lastNameError = validateLastName(formData.lastName)
+    if (lastNameError) newErrors.lastName = lastNameError
+
+    const emailError = validateEmail(formData.email)
     if (emailError) newErrors.email = emailError
 
     const passwordError = validatePassword(formData.password)
@@ -78,13 +85,18 @@ export default function RegisterPage() {
     const confirmError = validateConfirmPassword(formData.password, formData.confirmPassword)
     if (confirmError) newErrors.confirmPassword = confirmError
 
+    if (!formData.agreeToTerms) {
+      newErrors.agreeToTerms = 'You must agree to the Terms & Conditions to register.'
+    }
+
     setErrors(newErrors)
     return Object.keys(newErrors).length === 0
   }
 
   const handleChange = (e) => {
-    const { name, value } = e.target
-    setFormData((prev) => ({ ...prev, [name]: value }))
+    const { name, value, type, checked } = e.target
+    const val = type === 'checkbox' ? checked : value
+    setFormData((prev) => ({ ...prev, [name]: val }))
     if (errors[name]) {
       setErrors((prev) => ({ ...prev, [name]: undefined }))
     }
@@ -97,15 +109,24 @@ export default function RegisterPage() {
     setIsLoading(true)
     setErrors({})
 
+    const displayName = `${formData.firstName.trim()} ${formData.lastName.trim()}`
+
     try {
       await registerUser({
-        fullName: formData.fullName,
+        firstName: formData.firstName.trim(),
+        lastName: formData.lastName.trim(),
+        fullName: displayName,
         email: formData.email,
         password: formData.password,
       })
 
       navigate(ROUTES.AUTH.OTP, {
-        state: { email: formData.email, fullName: formData.fullName },
+        state: {
+          email: formData.email,
+          fullName: displayName,
+          firstName: formData.firstName.trim(),
+          lastName: formData.lastName.trim(),
+        },
       })
     } catch (err) {
       setErrors({ form: err?.message || 'Registration failed. Please try again.' })
@@ -194,27 +215,41 @@ export default function RegisterPage() {
           )}
 
           <form onSubmit={handleSubmit} noValidate className="space-y-4">
-            {/* 1. Full Name */}
-            <Input
-              label="Full Name"
-              id="fullName"
-              name="fullName"
-              type="text"
-              placeholder="e.g., Juan Dela Cruz"
-              value={formData.fullName}
-              onChange={handleChange}
-              error={errors.fullName}
-              autoComplete="name"
-              required
-            />
+            {/* 1. First Name & Last Name (stacked on mobile, 2-col on desktop) */}
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 sm:gap-4">
+              <Input
+                label="First Name"
+                id="firstName"
+                name="firstName"
+                type="text"
+                placeholder="e.g., Juan"
+                value={formData.firstName}
+                onChange={handleChange}
+                error={errors.firstName}
+                autoComplete="given-name"
+                required
+              />
+              <Input
+                label="Last Name"
+                id="lastName"
+                name="lastName"
+                type="text"
+                placeholder="e.g., Dela Cruz"
+                value={formData.lastName}
+                onChange={handleChange}
+                error={errors.lastName}
+                autoComplete="family-name"
+                required
+              />
+            </div>
 
-            {/* 2. Institutional Email */}
+            {/* 2. Email */}
             <Input
-              label="Institutional Email"
+              label="Email"
               id="email"
               name="email"
               type="email"
-              placeholder="e.g., name@institution.edu"
+              placeholder="e.g., juan.delacruz@university.edu"
               value={formData.email}
               onChange={handleChange}
               error={errors.email}
@@ -334,6 +369,40 @@ export default function RegisterPage() {
               />
             </div>
 
+            {/* 5. Terms & Conditions Agreement Checkbox */}
+            <div className="pt-1">
+              <div className="flex items-start gap-2.5">
+                <input
+                  id="agreeToTerms"
+                  name="agreeToTerms"
+                  type="checkbox"
+                  checked={formData.agreeToTerms}
+                  onChange={handleChange}
+                  className="mt-0.5 w-4 h-4 rounded border-surface-300 text-[#0B1F3A] focus:ring-[#0B1F3A] focus:ring-offset-0 cursor-pointer"
+                  aria-describedby={errors.agreeToTerms ? 'agreeToTerms-error' : undefined}
+                />
+                <label
+                  htmlFor="agreeToTerms"
+                  className="text-xs sm:text-sm text-surface-600 leading-snug cursor-pointer select-none"
+                >
+                  I agree to the{' '}
+                  <button
+                    type="button"
+                    onClick={() => setIsTermsModalOpen(true)}
+                    className="font-semibold text-accent-600 hover:text-accent-700 underline underline-offset-2 transition-colors cursor-pointer"
+                  >
+                    Terms &amp; Conditions
+                  </button>{' '}
+                  and acknowledge the Privacy Policy.
+                </label>
+              </div>
+              {errors.agreeToTerms && (
+                <p id="agreeToTerms-error" className="mt-1.5 text-xs text-danger-500" role="alert">
+                  {errors.agreeToTerms}
+                </p>
+              )}
+            </div>
+
             <div className="pt-2">
               <Button
                 type="submit"
@@ -361,7 +430,7 @@ export default function RegisterPage() {
                   d="M9 12.75 11.25 15 15 9.75m-3-7.036A11.959 11.959 0 0 1 3.598 6 11.99 11.99 0 0 0 3 9.749c0 5.592 3.824 10.29 9 11.623 5.176-1.332 9-6.03 9-11.622 0-1.31-.21-2.571-.598-3.751h-.152c-3.196 0-6.1-1.248-8.25-3.285Z"
                 />
               </svg>
-              <span>A 6-digit verification code will be dispatched to your institutional email.</span>
+              <span>A 6-digit verification code will be dispatched to your email.</span>
             </div>
           </form>
 
@@ -376,6 +445,73 @@ export default function RegisterPage() {
           </div>
         </div>
       </section>
+
+      {/* ── Terms & Conditions Modal ── */}
+      {isTermsModalOpen && (
+        <div
+          className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/50 backdrop-blur-xs animate-fade-in"
+          role="dialog"
+          aria-modal="true"
+          aria-labelledby="terms-modal-title"
+        >
+          <div className="bg-white rounded-2xl border border-surface-200 p-6 max-w-lg w-full shadow-xl space-y-4 animate-scale-in max-h-[85vh] flex flex-col">
+            <div className="flex items-center justify-between pb-3 border-b border-surface-100">
+              <h3 id="terms-modal-title" className="text-base sm:text-lg font-bold text-surface-900">
+                Terms &amp; Conditions
+              </h3>
+              <button
+                type="button"
+                onClick={() => setIsTermsModalOpen(false)}
+                className="text-surface-400 hover:text-surface-700 p-1 cursor-pointer text-lg leading-none"
+                aria-label="Close dialog"
+              >
+                ✕
+              </button>
+            </div>
+
+            <div className="overflow-y-auto pr-1 text-xs sm:text-sm text-surface-600 space-y-3 leading-relaxed">
+              <p>
+                <strong>1. Academic &amp; Research Integrity:</strong> Acuity is an automated CFU counting and morphological measurement platform designed for biology researchers, faculty advisers, and institutional laboratory personnel. Users agree to submit truthful research imagery and comply with their institution&apos;s research standards.
+              </p>
+              <p>
+                <strong>2. Data Privacy &amp; Compliance:</strong> In accordance with the Philippine Data Privacy Act of 2012 (RA 10173), research datasets and personal user records are isolated and protected. Users maintain ownership of raw and processed laboratory image data.
+              </p>
+              <p>
+                <strong>3. Human-in-the-Loop Validation:</strong> Automated AI detections provided by the platform serve as decision-support calculations. Final scientific results must be verified and approved by authorized faculty advisers before thesis export.
+              </p>
+              <p>
+                <strong>4. Account Responsibility:</strong> Users are responsible for safeguarding login credentials and OTP verification codes.
+              </p>
+            </div>
+
+            <div className="pt-3 border-t border-surface-100 flex justify-end gap-2.5">
+              <Button
+                type="button"
+                variant="secondary"
+                size="sm"
+                onClick={() => setIsTermsModalOpen(false)}
+              >
+                Close
+              </Button>
+              <Button
+                type="button"
+                variant="primary"
+                size="sm"
+                className="bg-[#0B1F3A] hover:bg-[#071527] text-white"
+                onClick={() => {
+                  setFormData((prev) => ({ ...prev, agreeToTerms: true }))
+                  if (errors.agreeToTerms) {
+                    setErrors((prev) => ({ ...prev, agreeToTerms: undefined }))
+                  }
+                  setIsTermsModalOpen(false)
+                }}
+              >
+                Accept Terms
+              </Button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   )
 }

@@ -40,8 +40,12 @@ import AnnotationWorkspacePage from '@/pages/student/AnnotationWorkspace'
 // Faculty Pages
 import FacultyOverviewPage from '@/pages/faculty/OverviewPage'
 import FacultyReviewQueuePage from '@/pages/faculty/ReviewQueuePage'
+import FacultyReviewPage from '@/pages/faculty/ReviewPage'
+import FacultyReviewCanvasPage from '@/pages/faculty/FacultyReviewCanvasPage'
 import FacultyAdviseesPage from '@/pages/faculty/AdviseesPage'
+import FacultyAdviseeDetailPage from '@/pages/faculty/AdviseeDetailPage'
 import FacultyValidatedArchivePage from '@/pages/faculty/ValidatedArchivePage'
+import FacultyArchivedProjectDetailPage from '@/pages/faculty/ArchivedProjectDetailPage'
 
 // System Administrator Pages
 import AdminOverviewPage from '@/pages/admin/OverviewPage'
@@ -124,8 +128,14 @@ export default function AppRoutes() {
           <Route element={<ProtectedRoute allowedRoles={[ROLES.FACULTY]} />}>
             <Route path={ROUTES.FACULTY.OVERVIEW} element={<FacultyOverviewPage />} />
             <Route path={ROUTES.FACULTY.REVIEW_QUEUE} element={<FacultyReviewQueuePage />} />
+            <Route path={ROUTES.FACULTY.PROJECT_REVIEW} element={<FacultyReviewPage />} />
+            <Route path={ROUTES.FACULTY.CANVAS} element={<FacultyReviewCanvasPage />} />
             <Route path={ROUTES.FACULTY.ADVISEES} element={<FacultyAdviseesPage />} />
+            <Route path={ROUTES.FACULTY.ADVISEE_DETAIL} element={<FacultyAdviseeDetailPage />} />
             <Route path={ROUTES.FACULTY.VALIDATED} element={<FacultyValidatedArchivePage />} />
+            <Route path={ROUTES.FACULTY.ARCHIVE} element={<FacultyValidatedArchivePage />} />
+            <Route path={ROUTES.FACULTY.ARCHIVE_RECORD} element={<FacultyArchivedProjectDetailPage />} />
+            <Route path="/faculty/validated/:projectId" element={<FacultyArchivedProjectDetailPage />} />
             <Route path="/faculty" element={<Navigate to={ROUTES.FACULTY.OVERVIEW} replace />} />
             <Route path="/faculty/dashboard" element={<Navigate to={ROUTES.FACULTY.OVERVIEW} replace />} />
           </Route>

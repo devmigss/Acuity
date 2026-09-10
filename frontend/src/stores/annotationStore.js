@@ -40,18 +40,18 @@ export const ANNOTATION_SOURCE = {
  * provide real detections, coordinates, and confidence values later.
  */
 const MOCK_AI_ANNOTATIONS = [
-  { id: 'ai-01', x: 180, y: 90,  radius: 32, confidence: 0.94, source: ANNOTATION_SOURCE.AI, corrected: false, original: null, softDeleted: false, type: 'colony' },
-  { id: 'ai-02', x: 320, y: 155, radius: 28, confidence: 0.91, source: ANNOTATION_SOURCE.AI, corrected: false, original: null, softDeleted: false, type: 'colony' },
-  { id: 'ai-03', x: 430, y: 95,  radius: 30, confidence: 0.88, source: ANNOTATION_SOURCE.AI, corrected: false, original: null, softDeleted: false, type: 'colony' },
-  { id: 'ai-04', x: 490, y: 290, radius: 26, confidence: 0.96, source: ANNOTATION_SOURCE.AI, corrected: false, original: null, softDeleted: false, type: 'colony' },
-  { id: 'ai-05', x: 560, y: 190, radius: 29, confidence: 0.90, source: ANNOTATION_SOURCE.AI, corrected: false, original: null, softDeleted: false, type: 'colony' },
-  { id: 'ai-06', x: 570, y: 355, radius: 27, confidence: 0.85, source: ANNOTATION_SOURCE.AI, corrected: false, original: null, softDeleted: false, type: 'colony' },
-  { id: 'ai-07', x: 250, y: 330, radius: 31, confidence: 0.89, source: ANNOTATION_SOURCE.AI, corrected: false, original: null, softDeleted: false, type: 'colony' },
-  { id: 'ai-08', x: 380, y: 390, radius: 28, confidence: 0.93, source: ANNOTATION_SOURCE.AI, corrected: false, original: null, softDeleted: false, type: 'colony' },
-  { id: 'ai-09', x: 145, y: 250, radius: 25, confidence: 0.87, source: ANNOTATION_SOURCE.AI, corrected: false, original: null, softDeleted: false, type: 'colony' },
-  { id: 'ai-10', x: 430, y: 270, radius: 30, confidence: 0.92, source: ANNOTATION_SOURCE.AI, corrected: false, original: null, softDeleted: false, type: 'colony' },
+  { id: 'ai-01', x: 220, y: 170, radius: 28, confidence: 0.94, source: ANNOTATION_SOURCE.AI, corrected: false, original: null, softDeleted: false, type: 'colony' },
+  { id: 'ai-02', x: 350, y: 220, radius: 26, confidence: 0.91, source: ANNOTATION_SOURCE.AI, corrected: false, original: null, softDeleted: false, type: 'colony' },
+  { id: 'ai-03', x: 450, y: 180, radius: 27, confidence: 0.88, source: ANNOTATION_SOURCE.AI, corrected: false, original: null, softDeleted: false, type: 'colony' },
+  { id: 'ai-04', x: 500, y: 380, radius: 25, confidence: 0.96, source: ANNOTATION_SOURCE.AI, corrected: false, original: null, softDeleted: false, type: 'colony' },
+  { id: 'ai-05', x: 530, y: 280, radius: 26, confidence: 0.90, source: ANNOTATION_SOURCE.AI, corrected: false, original: null, softDeleted: false, type: 'colony' },
+  { id: 'ai-06', x: 470, y: 490, radius: 25, confidence: 0.85, source: ANNOTATION_SOURCE.AI, corrected: false, original: null, softDeleted: false, type: 'colony' },
+  { id: 'ai-07', x: 230, y: 450, radius: 28, confidence: 0.89, source: ANNOTATION_SOURCE.AI, corrected: false, original: null, softDeleted: false, type: 'colony' },
+  { id: 'ai-08', x: 350, y: 520, radius: 26, confidence: 0.93, source: ANNOTATION_SOURCE.AI, corrected: false, original: null, softDeleted: false, type: 'colony' },
+  { id: 'ai-09', x: 180, y: 330, radius: 24, confidence: 0.87, source: ANNOTATION_SOURCE.AI, corrected: false, original: null, softDeleted: false, type: 'colony' },
+  { id: 'ai-10', x: 400, y: 340, radius: 27, confidence: 0.92, source: ANNOTATION_SOURCE.AI, corrected: false, original: null, softDeleted: false, type: 'colony' },
   // A manually added demo annotation:
-  { id: 'manual-01', x: 265, y: 195, radius: 30, confidence: null, source: ANNOTATION_SOURCE.MANUAL, corrected: false, original: null, softDeleted: false, type: 'colony' },
+  { id: 'manual-01', x: 280, y: 280, radius: 26, confidence: null, source: ANNOTATION_SOURCE.MANUAL, corrected: false, original: null, softDeleted: false, type: 'colony' },
 ]
 
 /**

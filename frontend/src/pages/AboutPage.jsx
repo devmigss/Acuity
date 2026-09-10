@@ -14,8 +14,19 @@
 
 import { Link } from 'react-router-dom'
 import { ROUTES } from '@/routes/routeConstants'
+import acuityAboutPagePreview from '@/assets/branding/AcuityAboutPagePreview.svg'
+import { useAdminStore } from '@/stores/useAdminStore'
 
 export default function AboutPage() {
+  const aboutContent = useAdminStore((s) => s.publicContent?.about)
+
+  const headline = aboutContent?.headline || 'Smarter colony counting for better research.'
+  const mission =
+    aboutContent?.mission ||
+    'Acuity is a web-based computer vision platform engineered to assist biology students, thesis researchers, and laboratory groups with automated Colony Forming Unit (CFU) detection, spatial calibration, morphological measurement, and academic verification.'
+  const challengeTitle = aboutContent?.challengeTitle || 'Why Manual Colony Counting Falls Short'
+  const previewGraphic = aboutContent?.previewGraphicUrl || acuityAboutPagePreview
+
   return (
     <div className="bg-white">
       {/* ── 1. Hero Section ── */}
@@ -30,12 +41,11 @@ export default function AboutPage() {
               </div>
 
               <h1 className="fade-in-up animation-delay-75 text-3xl sm:text-4xl lg:text-5xl font-extrabold text-primary-900 tracking-tight leading-[1.15]">
-                Smarter colony counting for{' '}
-                <span className="text-accent-400">better research</span>.
+                {headline}
               </h1>
 
               <p className="fade-in-up animation-delay-150 mt-6 text-base sm:text-lg text-surface-600 leading-relaxed">
-                Acuity is a web-based computer vision platform engineered to assist biology students, thesis researchers, and laboratory groups with automated Colony Forming Unit (CFU) detection, spatial calibration, morphological measurement, and academic verification.
+                {mission}
               </p>
 
               <div className="fade-in-up animation-delay-225 mt-8 flex flex-col sm:flex-row items-stretch sm:items-center gap-4">
@@ -54,44 +64,14 @@ export default function AboutPage() {
               </div>
             </div>
 
-            {/* Right: Petri Dish Image Placeholder */}
+            {/* Right: Acuity About Page Preview */}
             <div className="lg:col-span-5 fade-in-up animation-delay-150">
-              <div className="relative w-full aspect-4/3 rounded-2xl bg-primary-950 border border-primary-800 p-6 flex flex-col items-center justify-between shadow-xl overflow-hidden group">
-                {/* Background Grid Pattern */}
-                <div
-                  className="absolute inset-0 opacity-15 bg-[radial-gradient(#8193B7_1px,transparent_1px)] [background-size:16px_16px]"
-                  aria-hidden="true"
+              <div className="relative w-full rounded-2xl overflow-hidden shadow-2xl border border-surface-200/80 bg-[#050811] group">
+                <img
+                  src={previewGraphic}
+                  alt="Acuity Platform Preview — Automated CFU Detection and Interactive Verification Canvas"
+                  className="w-full h-auto object-contain transition-transform duration-300 group-hover:scale-[1.02]"
                 />
-
-                {/* Simulated Petri Dish Canvas Illustration */}
-                <div className="relative z-10 w-full flex-1 flex flex-col items-center justify-center">
-                  <div className="w-40 h-40 sm:w-48 sm:h-48 rounded-full border-2 border-accent-400/60 bg-primary-900/60 flex items-center justify-center relative shadow-inner">
-                    {/* Simulated colonies */}
-                    <div className="absolute top-8 left-12 w-3 h-3 rounded-full bg-accent-400 animate-pulse" />
-                    <div className="absolute top-16 right-10 w-2.5 h-2.5 rounded-full bg-accent-300" />
-                    <div className="absolute bottom-12 left-16 w-3.5 h-3.5 rounded-full bg-accent-400" />
-                    <div className="absolute bottom-10 right-14 w-2 h-2 rounded-full bg-accent-200" />
-                    <div className="absolute top-20 left-24 w-4 h-4 rounded-full bg-accent-400/90" />
-
-                    {/* Detection Bounding Box Marker */}
-                    <div className="absolute top-18 left-22 w-8 h-8 border border-dashed border-accent-300 rounded flex items-center justify-center text-[9px] text-accent-300 font-mono">
-                      CFU #12
-                    </div>
-
-                    {/* Petri dish inner rim */}
-                    <div className="w-32 h-32 sm:w-40 sm:h-40 rounded-full border border-primary-700/50" />
-                  </div>
-                </div>
-
-                {/* Placeholder Label Banner */}
-                <div className="relative z-10 w-full text-center pt-3 border-t border-primary-800/80">
-                  <div className="text-xs font-bold text-accent-400 tracking-wider uppercase">
-                    [Petri Dish Image Placeholder]
-                  </div>
-                  <div className="text-[11px] text-primary-200 mt-0.5">
-                    Ready for high-resolution laboratory photography
-                  </div>
-                </div>
               </div>
             </div>
           </div>
@@ -106,7 +86,7 @@ export default function AboutPage() {
               The Challenge
             </h2>
             <h3 className="text-2xl sm:text-3xl font-extrabold text-surface-900 tracking-tight">
-              Why Manual Colony Counting Falls Short
+              {challengeTitle}
             </h3>
             <p className="mt-4 text-surface-600 leading-relaxed">
               Traditional microbiology enumeration relies on researchers manually tallying hundreds of colonies across dozens of plates. This creates significant physical and methodological bottlenecks.

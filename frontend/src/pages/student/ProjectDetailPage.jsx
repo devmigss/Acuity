@@ -44,12 +44,6 @@ function formatDate(isoStr) {
   return d.toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })
 }
 
-function formatTime(isoStr) {
-  if (!isoStr) return ''
-  const d = new Date(isoStr)
-  return d.toLocaleTimeString('en-US', { hour: 'numeric', minute: '2-digit' })
-}
-
 /* ══════════════════════════════════════════════════════════════
    Main Component
    ══════════════════════════════════════════════════════════════ */
@@ -153,13 +147,58 @@ export default function ProjectDetailPage() {
 
         <div className="flex flex-col sm:flex-row sm:items-start sm:justify-between gap-3">
           <div>
-            <div className="inline-flex items-center gap-2 px-2.5 py-0.5 rounded-full bg-primary-50 border border-primary-100 text-xs font-semibold text-primary-900 mb-1.5">
-              <span className="w-2 h-2 rounded-full bg-accent-400" />
+            <div className={`inline-flex items-center gap-2 px-2.5 py-0.5 rounded-full border text-xs font-semibold mb-1.5 ${
+              project.status === 'Validated'
+                ? 'bg-emerald-50 border-emerald-200 text-emerald-800'
+                : project.status === 'Revision Required'
+                ? 'bg-amber-50 border-amber-200 text-amber-800'
+                : 'bg-primary-50 border-primary-100 text-primary-900'
+            }`}>
+              <span className={`w-2 h-2 rounded-full ${
+                project.status === 'Validated' ? 'bg-emerald-500' : 'bg-accent-400'
+              }`} />
               {project.status}
             </div>
             <PageHeader title={project.name} subtitle={project.organism ? `${project.organism} · ${project.adviser || 'No adviser'}` : project.description} />
           </div>
         </div>
+
+        {/* Status Notices */}
+        {project.status === 'Validated' && (
+          <div className="mt-3 p-3.5 rounded-xl bg-emerald-50 border border-emerald-200 text-emerald-900 flex items-center gap-3">
+            <div className="w-7 h-7 rounded-full bg-emerald-100 text-emerald-700 flex items-center justify-center shrink-0">
+              <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="2">
+                <path strokeLinecap="round" strokeLinejoin="round" d="M16.5 10.5V6.75a4.5 4.5 0 10-9 0v3.75m-.75 11.25h10.5a2.25 2.25 0 002.25-2.25v-6.75a2.25 2.25 0 00-2.25-2.25H6.75a2.25 2.25 0 00-2.25 2.25v6.75a2.25 2.25 0 002.25 2.25z" />
+              </svg>
+            </div>
+            <div className="text-xs">
+              <strong className="font-bold text-sm block">Dataset Locked by Adviser (Data Freeze Enforced)</strong>
+              This project has been approved and permanently frozen. Annotations cannot be edited.
+            </div>
+          </div>
+        )}
+
+        {project.status === 'Revision Required' && (
+          <div className="mt-3 p-3.5 rounded-xl bg-amber-50 border border-amber-200 text-amber-900 flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+            <div className="flex items-center gap-3">
+              <div className="w-7 h-7 rounded-full bg-amber-100 text-amber-700 flex items-center justify-center shrink-0">
+                <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="2">
+                  <path strokeLinecap="round" strokeLinejoin="round" d="M12 9v3.75m9-.75a9 9 0 11-18 0 9 9 0 0118 0zm-9 3.75h.008v.008H12v-.008z" />
+                </svg>
+              </div>
+              <div className="text-xs">
+                <strong className="font-bold text-sm block">Revision Required by Faculty Adviser</strong>
+                Your adviser requested corrections. Review the feedback in Adviser Remarks and update your annotations.
+              </div>
+            </div>
+            <Link
+              to={ROUTES.STUDENT.ADVISER_REMARKS}
+              className="text-xs font-bold text-amber-800 underline shrink-0 hover:text-amber-950"
+            >
+              View Remarks →
+            </Link>
+          </div>
+        )}
 
         {/* Tab Navigation */}
         <div className="flex gap-6 border-b border-surface-200 mt-4">
@@ -199,7 +238,7 @@ export default function ProjectDetailPage() {
    Overview Tab
    ══════════════════════════════════════════════════════════════ */
 
-function OverviewTab({ project, stats, plates, navigate }) {
+function OverviewTab({ project, stats, plates }) {
   const completedPlates = plates.filter(
     (p) => p.status === PLATE_STATUS.COMPLETED || p.status === PLATE_STATUS.REVIEWED || p.status === PLATE_STATUS.PENDING_ADVISER
   )

@@ -11,7 +11,7 @@ import { useAuth } from '@/context/AuthContext'
 import { ROUTES } from '@/routes/routeConstants'
 import { getDefaultRouteForRole } from '@/components/navigation/roleNavigation'
 import { ROLES } from '@/constants/roles'
-import acuityLogo from '@/assets/branding/acuity-logo.png'
+import acuityHeaderLogo from '@/assets/branding/AcuityHeader.svg'
 
 export default function DashboardHeader({ isMobileMenuOpen, onToggleMobileMenu }) {
   const { user } = useAuth()
@@ -20,11 +20,11 @@ export default function DashboardHeader({ isMobileMenuOpen, onToggleMobileMenu }
 
   const roleLabelMap = {
     [ROLES.STUDENT]: 'Student',
-    [ROLES.FACULTY]: 'Faculty',
+    [ROLES.FACULTY]: 'Faculty Adviser',
     [ROLES.SYSTEMADMIN]: 'System Admin',
   }
 
-  const roleLabel = (user?.role && roleLabelMap[user.role]) || 'User'
+  const roleLabel = (user?.role && roleLabelMap[user.role]) || 'Student'
 
   return (
     <header className="sticky top-0 z-50 bg-[#0B1F3A] border-b border-[#05101E]/80 shadow-xs h-16 shrink-0">
@@ -57,31 +57,30 @@ export default function DashboardHeader({ isMobileMenuOpen, onToggleMobileMenu }
             aria-label="Acuity Dashboard"
           >
             <img
-              src={acuityLogo}
+              src={acuityHeaderLogo}
               alt="Acuity"
               className="h-8 sm:h-9 w-auto object-contain transition-transform duration-200 group-hover:scale-105"
             />
           </Link>
         </div>
 
-        {/* Right: Role Badge & Identity Summary */}
-        <div className="flex items-center gap-3 sm:gap-4">
-          {/* Role Badge */}
-          <div className="hidden sm:inline-flex items-center px-2.5 py-1 rounded-full bg-white/10 border border-white/15 text-xs font-semibold text-accent-400 tracking-wide">
-            {roleLabel}
-          </div>
-
-          {/* User Display */}
+        {/* Right: Primary Identity Block (Display Name, Role, Email, Avatar) */}
+        <div className="flex items-center">
           <Link
             to={ROUTES.SETTINGS}
-            className="flex items-center gap-2.5 p-1 rounded-lg hover:bg-white/5 transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent-400"
+            className="flex items-center gap-3 p-1.5 -mr-1.5 rounded-xl hover:bg-white/10 transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent-400 group cursor-pointer"
             title="Account Settings"
           >
-            <div className="text-right hidden md:block">
-              <div className="text-xs font-semibold text-white leading-tight">
-                {user?.displayName || 'Acuity User'}
+            <div className="text-right hidden sm:flex sm:flex-col sm:items-end">
+              <div className="flex items-center gap-2">
+                <span className="text-xs font-semibold text-white group-hover:text-accent-300 transition-colors">
+                  {user?.displayName || 'Acuity User'}
+                </span>
+                <span className="inline-flex items-center px-2 py-0.5 rounded-full text-[10px] font-semibold bg-white/10 border border-white/15 text-accent-400 tracking-wide">
+                  {roleLabel}
+                </span>
               </div>
-              <div className="text-[11px] text-primary-200 leading-tight">
+              <div className="text-[11px] text-primary-200/85 leading-tight mt-0.5">
                 {user?.email || 'user@acuity.app'}
               </div>
             </div>
@@ -90,11 +89,11 @@ export default function DashboardHeader({ isMobileMenuOpen, onToggleMobileMenu }
               <img
                 src={user.avatar}
                 alt={user.displayName || 'User'}
-                className="w-8 h-8 rounded-full object-cover border border-white/20"
+                className="w-9 h-9 rounded-full object-cover border border-white/20 shadow-xs shrink-0"
               />
             ) : (
-              <div className="w-8 h-8 rounded-full bg-accent-400 text-[#0B1F3A] flex items-center justify-center font-bold text-xs">
-                {user?.displayName ? user.displayName.charAt(0) : 'U'}
+              <div className="w-9 h-9 rounded-full bg-accent-400 text-[#0B1F3A] flex items-center justify-center font-bold text-xs shrink-0 shadow-xs">
+                {user?.displayName ? user.displayName.charAt(0).toUpperCase() : 'U'}
               </div>
             )}
           </Link>

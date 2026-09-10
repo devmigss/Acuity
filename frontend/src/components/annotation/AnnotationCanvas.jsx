@@ -24,14 +24,13 @@
  */
 
 import { useRef, useCallback, useEffect, useState } from 'react'
-import { Stage, Layer, Circle, Text, Rect, Ellipse, Group } from 'react-konva'
+import { Stage, Layer, Circle, Text, Rect, Group } from 'react-konva'
 import { useAnnotationStore, TOOLS, ANNOTATION_SOURCE } from '@/stores/annotationStore'
 
-/* ── Canvas coordinate constants (normalised space) ── */
+/* ── Canvas coordinate constants (normalised space — 1:1 square) ── */
 const CANVAS_W = 700
-const CANVAS_H = 480
-const PETRI_RX = 295
-const PETRI_RY = 210
+const CANVAS_H = 700
+const PETRI_R = 300
 
 /* ── Geometry constraints (normalized units) ── */
 const MIN_RADIUS = 10
@@ -64,7 +63,6 @@ function AnnotationMark({
 }) {
   const isManual = annotation.source === ANNOTATION_SOURCE.MANUAL
   const isCorrectedAI = !isManual && Boolean(annotation.corrected)
-  const isUntouchedAI = !isManual && !annotation.corrected
 
   // Visual color encoding
   let statusColor = '#10B981' // Emerald for Untouched AI
@@ -363,12 +361,12 @@ export default function AnnotationCanvas({
   // Effective tool: spacebar overrides to PAN temporarily
   const effectiveTool = isSpacePanning ? TOOLS.PAN : activeTool
 
-  /* ── Responsive resize ── */
+  /* ── Responsive resize (1:1 square Petri dish container) ── */
   useEffect(() => {
     const observer = new ResizeObserver((entries) => {
       for (const entry of entries) {
         const w = entry.contentRect.width
-        if (w > 0) setStageSize({ w, h: Math.max(320, w * 0.65) })
+        if (w > 0) setStageSize({ w, h: w })
       }
     })
     if (containerRef.current) observer.observe(containerRef.current)
@@ -429,7 +427,7 @@ export default function AnnotationCanvas({
   useEffect(() => {
     if (!resizing) return
 
-    const handleWindowMouseMove = (e) => {
+    const handleWindowMouseMove = () => {
       const stage = stageRef.current
       if (!stage) return
       const pointer = stage.getPointerPosition()
@@ -501,7 +499,7 @@ export default function AnnotationCanvas({
   }, [zoom, stageOffset, setZoom, setStageOffset])
 
   /* ── Stage pointer events for pan drag ── */
-  const handleStageMouseDown = useCallback((e) => {
+  const handleStageMouseDown = useCallback(() => {
     if (effectiveTool !== TOOLS.PAN) return
     const stage = stageRef.current
     if (!stage) return
@@ -606,18 +604,17 @@ export default function AnnotationCanvas({
     effectiveTool !== TOOLS.PAN &&
     (activeTool === TOOLS.SELECT || activeTool === TOOLS.RESIZE)
 
-  /* ── Derived Petri dimensions ── */
+  /* ── Derived Petri dimensions (1:1 circular ROI) ── */
   const annotations = getVisibleAnnotations()
   const petriCX = canvasWidth  / 2
   const petriCY = canvasHeight / 2
-  const petriRX = PETRI_RX * scaleXFactor
-  const petriRY = PETRI_RY * scaleYFactor
+  const petriRadiusPx = PETRI_R * scaleRadius
 
   return (
     <div
       ref={containerRef}
-      className="w-full rounded-xl overflow-hidden border border-surface-200 bg-[#E8EFF5] shadow-sm select-none"
-      style={{ minHeight: 320, touchAction: 'none' }}
+      className="w-full max-w-[620px] aspect-square mx-auto rounded-2xl overflow-hidden border border-surface-200 bg-[#E8EFF5] shadow-sm select-none relative"
+      style={{ touchAction: 'none' }}
       onKeyDown={(e) => { if (e.code === 'Space') e.preventDefault() }}
     >
       <Stage
@@ -649,38 +646,35 @@ export default function AnnotationCanvas({
             perfectDrawEnabled={false}
           />
 
-          {/* Petri dish outer rim */}
-          <Ellipse
+          {/* Petri dish outer rim (circular) */}
+          <Circle
             x={petriCX}
             y={petriCY}
-            radiusX={petriRX}
-            radiusY={petriRY}
+            radius={petriRadiusPx}
             fill="transparent"
             stroke="#C4CEDB"
             strokeWidth={12}
             perfectDrawEnabled={false}
           />
 
-          {/* Petri dish agar surface */}
-          <Ellipse
+          {/* Petri dish agar surface (circular) */}
+          <Circle
             x={petriCX}
             y={petriCY}
-            radiusX={petriRX - 8}
-            radiusY={petriRY - 8}
+            radius={petriRadiusPx - 8}
             fill="#F0F4F8"
             stroke="#D0DCEA"
             strokeWidth={1.5}
             perfectDrawEnabled={false}
           />
 
-          {/* Subtle agar rings */}
+          {/* Subtle agar rings (circular) */}
           {[0.6, 0.85].map((r, i) => (
-            <Ellipse
+            <Circle
               key={i}
               x={petriCX}
               y={petriCY}
-              radiusX={(petriRX - 8) * r}
-              radiusY={(petriRY - 8) * r}
+              radius={(petriRadiusPx - 8) * r}
               fill="transparent"
               stroke="#E4ECF3"
               strokeWidth={0.8}

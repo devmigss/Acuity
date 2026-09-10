@@ -13,16 +13,23 @@ import { useState } from 'react'
 import { Link, useNavigate } from 'react-router-dom'
 import { ROUTES } from '@/routes/routeConstants'
 import { useAuth, DEMO_USERS } from '@/context/AuthContext'
-import { validateInstitutionalEmail } from '@/utils/authValidation'
+import { useAdminStore } from '@/stores/useAdminStore'
 import Button from '@/components/ui/Button'
 import Input from '@/components/ui/Input'
 
 export default function LoginPage() {
   const navigate = useNavigate()
   const { login, loginWithGoogle, isLoading } = useAuth()
+  const loginContent = useAdminStore((s) => s.publicContent?.login)
+
+  const bannerTagline = loginContent?.tagline || 'Colony counting, without the eye strain.'
+  const brandGraphic = loginContent?.brandGraphicUrl
+  const statList = loginContent?.stats
+    ? loginContent.stats.split(/[·|]/).map((s) => s.trim()).filter(Boolean)
+    : ['85%+ Target detection F1', '40-70 Fine-tuning images', '1-click CSV export']
 
   const [formData, setFormData] = useState({
-    username: '',
+    email: '',
     password: '',
   })
 
@@ -37,8 +44,8 @@ export default function LoginPage() {
   const validateForm = () => {
     const newErrors = {}
 
-    if (!formData.username.trim()) {
-      newErrors.username = 'Username or email is required'
+    if (!formData.email.trim()) {
+      newErrors.email = 'Email is required'
     }
 
     if (!formData.password) {
@@ -71,7 +78,7 @@ export default function LoginPage() {
         : ROUTES.STUDENT.DASHBOARD
       navigate(redirectPath, { replace: true })
     } catch (err) {
-      setAuthNotice(err?.message || 'Invalid username or password')
+      setAuthNotice(err?.message || 'Invalid email or password')
     }
   }
 
@@ -109,8 +116,7 @@ export default function LoginPage() {
       >
         <div className="w-full max-w-xl mx-auto">
           <h1 className="fade-in-up text-3xl sm:text-4xl lg:text-[42px] xl:text-5xl font-extrabold text-[#0B1F3A] tracking-tight leading-[1.15]">
-            Colony counting, <br />
-            without the <span className="text-accent-400">eye strain</span>.
+            {bannerTagline}
           </h1>
 
           <p className="fade-in-up animation-delay-75 mt-5 sm:mt-6 text-sm sm:text-base text-surface-500 leading-relaxed max-w-lg">
@@ -118,33 +124,28 @@ export default function LoginPage() {
           </p>
 
           <div className="fade-in-up animation-delay-150 mt-12 sm:mt-14 lg:mt-16 grid grid-cols-3 gap-6 sm:gap-8 max-w-lg">
-            <div className="flex flex-col">
-              <span className="text-3xl sm:text-4xl font-extrabold text-[#0B1F3A] tracking-tight leading-none">
-                85%+
-              </span>
-              <span className="mt-2 text-xs sm:text-sm font-semibold text-accent-600 tracking-tight leading-snug">
-                Target detection F1
-              </span>
-            </div>
-
-            <div className="flex flex-col">
-              <span className="text-3xl sm:text-4xl font-extrabold text-[#0B1F3A] tracking-tight leading-none">
-                40-70
-              </span>
-              <span className="mt-2 text-xs sm:text-sm font-semibold text-accent-600 tracking-tight leading-snug">
-                Fine-tuning images
-              </span>
-            </div>
-
-            <div className="flex flex-col">
-              <span className="text-3xl sm:text-4xl font-extrabold text-[#0B1F3A] tracking-tight leading-none">
-                1-click
-              </span>
-              <span className="mt-2 text-xs sm:text-sm font-semibold text-accent-600 tracking-tight leading-snug">
-                CSV export
-              </span>
-            </div>
+            {statList.map((statItem, idx) => {
+              const parts = statItem.split(' ')
+              const value = parts[0]
+              const label = parts.slice(1).join(' ')
+              return (
+                <div key={idx} className="flex flex-col">
+                  <span className="text-3xl sm:text-4xl font-extrabold text-[#0B1F3A] tracking-tight leading-none">
+                    {value}
+                  </span>
+                  <span className="mt-2 text-xs sm:text-sm font-semibold text-accent-600 tracking-tight leading-snug">
+                    {label || value}
+                  </span>
+                </div>
+              )
+            })}
           </div>
+
+          {brandGraphic && (
+            <div className="mt-8 rounded-xl overflow-hidden border border-surface-200 max-h-48 shadow-sm">
+              <img src={brandGraphic} alt="Brand Graphic" className="w-full h-auto object-cover" />
+            </div>
+          )}
         </div>
 
         <div className="w-full max-w-xl mx-auto fade-in-up animation-delay-300 mt-12 lg:mt-auto pt-8 text-xs text-surface-400 border-t border-surface-100 lg:border-none">
@@ -167,7 +168,7 @@ export default function LoginPage() {
               Login to your workspace
             </h2>
             <p className="mt-1.5 text-xs sm:text-sm text-surface-400">
-              Enter your institutional credentials to access your laboratory workspace.
+              Enter your credentials to access your laboratory workspace.
             </p>
           </div>
 
@@ -226,15 +227,16 @@ export default function LoginPage() {
           {/* Native Credential Form */}
           <form onSubmit={handleSubmit} noValidate className="space-y-4">
             <Input
-              label="Username or Institutional Email"
-              id="username"
-              name="username"
+              label="Email"
+              id="email"
+              name="email"
               type="text"
-              placeholder="e.g., student or name@institution.edu"
-              value={formData.username}
+              inputMode="email"
+              placeholder="e.g., student@labgroup.acuity.app or student"
+              value={formData.email}
               onChange={handleChange}
-              error={errors.username}
-              autoComplete="username"
+              error={errors.email}
+              autoComplete="email"
               required
             />
 

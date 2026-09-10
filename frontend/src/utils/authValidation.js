@@ -48,30 +48,70 @@ export function isPersonalEmail(email) {
 }
 
 /**
- * Validates institutional email input.
+ * Validates standard email address format without requiring specific domain allowlists.
  * Returns null if valid, or a user-friendly error message string if invalid.
  */
-export function validateInstitutionalEmail(email) {
+export function validateEmail(email) {
   if (!email || !email.trim()) {
-    return 'Please enter your institutional email.'
+    return 'Please enter your email address.'
   }
 
   const trimmed = email.trim()
-  // General standard email pattern
   const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/
   if (!emailRegex.test(trimmed)) {
     return 'Please enter a valid email address.'
   }
 
-  if (isPersonalEmail(trimmed)) {
-    return 'Personal email accounts are not permitted. Please use your institutional email.'
+  return null
+}
+
+/**
+ * Validates institutional email input.
+ * Aliased to validateEmail to adhere to the capstone specification without unbacked domain restrictions.
+ */
+export function validateInstitutionalEmail(email) {
+  return validateEmail(email)
+}
+
+/**
+ * Validates first name.
+ * Accepts real-world names with letters, spaces, hyphens, and apostrophes.
+ * Requires at least 2 characters.
+ */
+export function validateFirstName(name) {
+  if (!name || !name.trim()) {
+    return 'Please enter your first name.'
   }
 
-  if (APPROVED_INSTITUTIONAL_DOMAINS.length > 0) {
-    const domain = trimmed.toLowerCase().split('@')[1]
-    if (!APPROVED_INSTITUTIONAL_DOMAINS.includes(domain)) {
-      return 'Email domain is not recognized as an approved institutional domain.'
-    }
+  const trimmed = name.trim()
+  if (trimmed.length < 2) {
+    return 'First name must be at least 2 characters.'
+  }
+
+  if (!/[\p{L}]/u.test(trimmed)) {
+    return 'Please enter a valid first name.'
+  }
+
+  return null
+}
+
+/**
+ * Validates last name.
+ * Accepts real-world names with letters, spaces, hyphens, and apostrophes.
+ * Requires at least 2 characters.
+ */
+export function validateLastName(name) {
+  if (!name || !name.trim()) {
+    return 'Please enter your last name.'
+  }
+
+  const trimmed = name.trim()
+  if (trimmed.length < 2) {
+    return 'Last name must be at least 2 characters.'
+  }
+
+  if (!/[\p{L}]/u.test(trimmed)) {
+    return 'Please enter a valid last name.'
   }
 
   return null

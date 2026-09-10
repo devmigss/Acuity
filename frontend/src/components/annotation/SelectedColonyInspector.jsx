@@ -9,7 +9,9 @@
 import { useAnnotationStore, ANNOTATION_SOURCE } from '@/stores/annotationStore'
 import Button from '@/components/ui/Button'
 
-export default function SelectedColonyInspector() {
+export default function SelectedColonyInspector({ mode = 'student_edit', readOnly = false }) {
+  const isReadOnly = readOnly || mode !== 'student_edit'
+
   const {
     getSelectedAnnotation,
     clearSelection,
@@ -29,7 +31,9 @@ export default function SelectedColonyInspector() {
           <span>No Colony Selected</span>
         </div>
         <p className="mt-1 text-[11px] text-surface-400">
-          Click any colony on the dish to move, resize, or inspect AI provenance.
+          {isReadOnly
+            ? 'Plate is read-only. Select a colony to inspect its diameter, area, and AI confidence.'
+            : 'Select a colony to adjust its boundary or inspect AI provenance.'}
         </p>
       </div>
     )
@@ -111,28 +115,36 @@ export default function SelectedColonyInspector() {
             <div className="font-mono text-[10px] text-amber-700">
               Pos: ({Math.round(selected.original.x)}, {Math.round(selected.original.y)}) · Radius: {Math.round(selected.original.radius)}px
             </div>
-            <button
-              type="button"
-              onClick={() => revertAnnotation(selected.id)}
-              className="mt-1 w-full py-1 px-2 rounded text-[11px] font-semibold bg-amber-100 hover:bg-amber-200 text-amber-900 border border-amber-300 cursor-pointer transition-colors"
-            >
-              ↺ Revert to AI Baseline
-            </button>
+            {!isReadOnly && (
+              <button
+                type="button"
+                onClick={() => revertAnnotation(selected.id)}
+                className="mt-1 w-full py-1 px-2 rounded text-[11px] font-semibold bg-amber-100 hover:bg-amber-200 text-amber-900 border border-amber-300 cursor-pointer transition-colors"
+              >
+                ↺ Revert to AI Baseline
+              </button>
+            )}
           </div>
         )}
 
-        {/* Action buttons */}
-        <div className="pt-1 flex items-center gap-2">
-          <Button
-            type="button"
-            variant="ghost"
-            size="sm"
-            onClick={() => deleteAnnotation(selected.id)}
-            className="w-full text-danger-600 hover:bg-danger-50 hover:text-danger-700 text-xs py-1.5"
-          >
-            Delete Colony (Del)
-          </Button>
-        </div>
+        {/* Action buttons (only in edit mode) */}
+        {!isReadOnly ? (
+          <div className="pt-1 flex items-center gap-2">
+            <Button
+              type="button"
+              variant="ghost"
+              size="sm"
+              onClick={() => deleteAnnotation(selected.id)}
+              className="w-full text-danger-600 hover:bg-danger-50 hover:text-danger-700 text-xs py-1.5"
+            >
+              Delete Colony (Del)
+            </Button>
+          </div>
+        ) : (
+          <div className="pt-1 text-[11px] text-surface-400 italic text-center">
+            Colony geometry is read-only in this mode.
+          </div>
+        )}
       </div>
     </div>
   )

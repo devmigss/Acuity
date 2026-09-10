@@ -137,10 +137,24 @@ const TOOL_DEFS = [
 
 /* ─── Main Toolbar Component ─────────────────────────────── */
 
-export default function AnnotationToolbar({ onZoomIn, onZoomOut, onFitView, zoom, isSpacebarPanning }) {
+export default function AnnotationToolbar({
+  onZoomIn,
+  onZoomOut,
+  onFitView,
+  zoom,
+  isSpacebarPanning,
+  mode = 'student_edit',
+  readOnly = false,
+  onAddRemarkPin,
+}) {
   const { activeTool, setActiveTool, selectedAnnotationId, deleteAnnotation } = useAnnotationStore()
 
+  const isLockedOrFaculty = readOnly || mode !== 'student_edit'
+
   const handleToolClick = (toolId) => {
+    if (isLockedOrFaculty && toolId !== TOOLS.SELECT && toolId !== TOOLS.PAN) {
+      return
+    }
     if (toolId === TOOLS.DELETE) {
       if (selectedAnnotationId) {
         deleteAnnotation(selectedAnnotationId)
@@ -153,109 +167,158 @@ export default function AnnotationToolbar({ onZoomIn, onZoomOut, onFitView, zoom
   // When Spacebar is held, visually show PAN as active but don't persist the tool change
   const displayActiveTool = isSpacebarPanning ? TOOLS.PAN : activeTool
 
+  // Filter tools based on mode
+  const visibleTools = isLockedOrFaculty
+    ? TOOL_DEFS.filter((t) => t.id === TOOLS.SELECT || t.id === TOOLS.PAN)
+    : TOOL_DEFS
+
   return (
-    <div className="flex flex-wrap items-center gap-2" role="toolbar" aria-label="Annotation tools">
+    <div className="flex flex-wrap items-center justify-between gap-3 p-1.5 bg-white rounded-xl border border-surface-200 shadow-2xs" role="toolbar" aria-label="Annotation tools">
 
-      {/* ── Primary Tool Group ── */}
-      <div
-        className="flex items-center gap-1 bg-surface-100 rounded-xl p-1.5"
-        role="group"
-        aria-label="Annotation tools"
-      >
-        {TOOL_DEFS.map((tool) => {
-          const isActive = displayActiveTool === tool.id && !tool.isDangerAction
-          const isDeleteDisabled = tool.isDangerAction && !selectedAnnotationId
+      <div className="flex items-center gap-2 flex-wrap">
+        {/* ── Primary Tool Group ── */}
+        <div
+          className="flex items-center gap-1 bg-surface-100 rounded-xl p-1.5"
+          role="group"
+          aria-label="Annotation tools"
+        >
+          {visibleTools.map((tool) => {
+            const isActive = displayActiveTool === tool.id && !tool.isDangerAction
+            const isDeleteDisabled = tool.isDangerAction && !selectedAnnotationId
 
-          const baseClasses = `
-            p-2.5 rounded-lg transition-all duration-150 cursor-pointer
-            focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent-400 focus-visible:ring-offset-1
-            disabled:opacity-35 disabled:cursor-not-allowed
-          `
+            const baseClasses = `
+              p-2.5 rounded-lg transition-all duration-150 cursor-pointer
+              focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent-400 focus-visible:ring-offset-1
+              disabled:opacity-35 disabled:cursor-not-allowed
+            `
 
-          const variantClasses = isActive
-            ? 'bg-[#0B1F3A] text-white shadow-sm'
-            : tool.isDangerAction
-            ? 'bg-transparent text-danger-500 hover:bg-danger-50 hover:text-danger-700'
-            : 'bg-transparent text-surface-600 hover:bg-white hover:text-surface-900 hover:shadow-sm'
+            const variantClasses = isActive
+              ? 'bg-[#0B1F3A] text-white shadow-sm'
+              : tool.isDangerAction
+              ? 'bg-transparent text-danger-500 hover:bg-danger-50 hover:text-danger-700'
+              : 'bg-transparent text-surface-600 hover:bg-white hover:text-surface-900 hover:shadow-sm'
 
-          // Pan tool gets a subtle teal tint to distinguish it from SELECT
-          const panHighlight = tool.id === TOOLS.PAN && isSpacebarPanning && !isActive
-            ? 'ring-1 ring-accent-400/50'
-            : ''
+            // Pan tool gets a subtle ring when spacebar panning
+            const panHighlight = tool.id === TOOLS.PAN && isSpacebarPanning && !isActive
+              ? 'ring-1 ring-accent-400/50'
+              : ''
 
-          return (
-            <Tooltip key={tool.id} label={tool.label} shortcut={tool.shortcut}>
+            return (
+              <Tooltip key={tool.id} label={tool.label} shortcut={tool.shortcut}>
+                <button
+                  type="button"
+                  onClick={() => handleToolClick(tool.id)}
+                  disabled={isDeleteDisabled}
+                  className={`${baseClasses} ${variantClasses} ${panHighlight}`}
+                  aria-label={tool.label}
+                  aria-pressed={isActive}
+                  aria-keyshortcuts={tool.shortcut}
+                >
+                  {tool.id === TOOLS.PAN ? (
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.75" className="w-5 h-5" aria-hidden="true">
+                      <path strokeLinecap="round" strokeLinejoin="round"
+                        d="M10.5 6h.008M10.5 6a1.5 1.5 0 1 0 0 3h.008a1.5 1.5 0 0 0 0-3ZM6 9.75A3.75 3.75 0 0 1 9.75 6h4.5A3.75 3.75 0 0 1 18 9.75v.75h-3v-.75a.75.75 0 0 0-.75-.75H9.75a.75.75 0 0 0-.75.75v.75H6v-.75Z
+                        M6 10.5H3.75a.75.75 0 0 0-.75.75v4.5c0 .414.336.75.75.75H6M18 10.5h2.25c.414 0 .75.336.75.75v4.5a.75.75 0 0 1-.75.75H18
+                        M6 10.5v6.75M18 10.5v6.75M6 17.25h12M6 17.25A2.25 2.25 0 0 0 8.25 19.5h7.5A2.25 2.25 0 0 0 18 17.25" />
+                    </svg>
+                  ) : (
+                    tool.icon
+                  )}
+                </button>
+              </Tooltip>
+            )
+          })}
+
+          {/* Faculty Review: Add Comment Pin action */}
+          {mode === 'faculty_review' && onAddRemarkPin && (
+            <Tooltip label="Add Spatial Remark / Pin" shortcut="M">
               <button
                 type="button"
-                onClick={() => handleToolClick(tool.id)}
-                disabled={isDeleteDisabled}
-                className={`${baseClasses} ${variantClasses} ${panHighlight}`}
-                aria-label={tool.label}
-                aria-pressed={isActive}
-                aria-keyshortcuts={tool.shortcut}
+                onClick={onAddRemarkPin}
+                className="p-2.5 rounded-lg transition-all duration-150 cursor-pointer text-primary-700 hover:bg-white hover:text-primary-900 hover:shadow-sm"
+                aria-label="Add Spatial Remark Pin"
               >
-                {/* Use the first icon; PAN uses a hand icon defined inline */}
-                {tool.id === TOOLS.PAN ? (
-                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.75" className="w-5 h-5" aria-hidden="true">
-                    <path strokeLinecap="round" strokeLinejoin="round"
-                      d="M10.5 6h.008M10.5 6a1.5 1.5 0 1 0 0 3h.008a1.5 1.5 0 0 0 0-3ZM6 9.75A3.75 3.75 0 0 1 9.75 6h4.5A3.75 3.75 0 0 1 18 9.75v.75h-3v-.75a.75.75 0 0 0-.75-.75H9.75a.75.75 0 0 0-.75.75v.75H6v-.75Z
-                      M6 10.5H3.75a.75.75 0 0 0-.75.75v4.5c0 .414.336.75.75.75H6M18 10.5h2.25c.414 0 .75.336.75.75v4.5a.75.75 0 0 1-.75.75H18
-                      M6 10.5v6.75M18 10.5v6.75M6 17.25h12M6 17.25A2.25 2.25 0 0 0 8.25 19.5h7.5A2.25 2.25 0 0 0 18 17.25" />
-                  </svg>
-                ) : (
-                  tool.icon
-                )}
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" className="w-5 h-5" aria-hidden="true">
+                  <path strokeLinecap="round" strokeLinejoin="round" d="M7.5 8.25h9m-9 3H12m-9.75 1.51c0 1.6 1.123 2.994 2.707 3.227 1.129.166 2.27.293 3.423.379.35.026.67.21.865.501L12 21l2.755-4.133a1.14 1.14 0 0 1 .865-.502 49.188 49.188 0 0 0 3.423-.379c1.584-.233 2.707-1.626 2.707-3.228V6.741c0-1.602-1.123-2.995-2.707-3.228A48.394 48.394 0 0 0 12 3c-2.392 0-4.744.175-7.043.513C3.373 3.746 2.25 5.14 2.25 6.741v7.018Z" />
+                </svg>
               </button>
             </Tooltip>
-          )
-        })}
+          )}
+        </div>
+
+        {/* ── Divider ── */}
+        <div className="h-8 w-px bg-surface-200 hidden sm:block" aria-hidden="true" />
+
+        {/* ── Zoom Controls ── */}
+        <div
+          className="flex items-center gap-1 bg-surface-100 rounded-xl p-1.5"
+          role="group"
+          aria-label="Zoom controls"
+        >
+          <Tooltip label="Zoom Out" shortcut="−">
+            <button
+              type="button"
+              onClick={onZoomOut}
+              className="p-2 rounded-lg text-surface-600 hover:bg-white hover:text-surface-900 hover:shadow-sm transition-all cursor-pointer focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent-400"
+              aria-label="Zoom out"
+            >
+              <svg className="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" aria-hidden="true">
+                <path strokeLinecap="round" strokeLinejoin="round" d="M21 21l-5.197-5.197m0 0A7.5 7.5 0 1 0 5.196 5.196a7.5 7.5 0 0 0 10.607 10.607ZM13.5 10.5h-6" />
+              </svg>
+            </button>
+          </Tooltip>
+
+          <Tooltip label="Fit to View" shortcut="0">
+            <button
+              type="button"
+              onClick={onFitView}
+              className="px-2 py-1.5 rounded-lg text-xs font-bold text-surface-700 hover:bg-white hover:text-surface-900 hover:shadow-sm transition-all cursor-pointer focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent-400 tabular-nums min-w-[3.5rem] text-center"
+              aria-label={`Current zoom: ${Math.round(zoom * 100)}%. Click to reset.`}
+            >
+              {Math.round(zoom * 100)}%
+            </button>
+          </Tooltip>
+
+          <Tooltip label="Zoom In" shortcut="+">
+            <button
+              type="button"
+              onClick={onZoomIn}
+              className="p-2 rounded-lg text-surface-600 hover:bg-white hover:text-surface-900 hover:shadow-sm transition-all cursor-pointer focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent-400"
+              aria-label="Zoom in"
+            >
+              <svg className="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" aria-hidden="true">
+                <path strokeLinecap="round" strokeLinejoin="round" d="M21 21l-5.197-5.197m0 0A7.5 7.5 0 1 0 5.196 5.196a7.5 7.5 0 0 0 10.607 10.607ZM10.5 7.5v6m3-3h-6" />
+              </svg>
+            </button>
+          </Tooltip>
+        </div>
       </div>
 
-      {/* ── Divider ── */}
-      <div className="h-8 w-px bg-surface-200 hidden sm:block" aria-hidden="true" />
-
-      {/* ── Zoom Controls ── */}
-      <div
-        className="flex items-center gap-1 bg-surface-100 rounded-xl p-1.5"
-        role="group"
-        aria-label="Zoom controls"
-      >
-        <Tooltip label="Zoom Out" shortcut="−">
-          <button
-            type="button"
-            onClick={onZoomOut}
-            className="p-2 rounded-lg text-surface-600 hover:bg-white hover:text-surface-900 hover:shadow-sm transition-all cursor-pointer focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent-400"
-            aria-label="Zoom out"
-          >
-            <svg className="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" aria-hidden="true">
-              <path strokeLinecap="round" strokeLinejoin="round" d="M21 21l-5.197-5.197m0 0A7.5 7.5 0 1 0 5.196 5.196a7.5 7.5 0 0 0 10.607 10.607ZM13.5 10.5h-6" />
+      {/* ── Mode Status Badge / Hint ── */}
+      <div className="flex items-center gap-2">
+        {mode === 'faculty_review' && (
+          <span className="text-xs font-semibold text-primary-800 bg-primary-50 border border-primary-200 px-2.5 py-1 rounded-lg">
+            Review Mode · Read-Only Geometry
+          </span>
+        )}
+        {mode === 'faculty_archive' && (
+          <span className="text-xs font-semibold text-surface-600 bg-surface-100 border border-surface-200 px-2.5 py-1 rounded-lg">
+            Archived Record · Strictly Immutable
+          </span>
+        )}
+        {mode === 'student_locked' && (
+          <span className="text-xs font-semibold text-amber-800 bg-amber-50 border border-amber-200 px-2.5 py-1 rounded-lg flex items-center gap-1.5">
+            <svg className="w-3.5 h-3.5 text-amber-600" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="2">
+              <path strokeLinecap="round" strokeLinejoin="round" d="M16.5 10.5V6.75a4.5 4.5 0 10-9 0v3.75m-.75 11.25h10.5a2.25 2.25 0 002.25-2.25v-6.75a2.25 2.25 0 00-2.25-2.25H6.75a2.25 2.25 0 00-2.25 2.25v6.75a2.25 2.25 0 002.25 2.25z" />
             </svg>
-          </button>
-        </Tooltip>
-
-        <Tooltip label="Fit to View" shortcut="0">
-          <button
-            type="button"
-            onClick={onFitView}
-            className="px-2 py-1.5 rounded-lg text-xs font-bold text-surface-700 hover:bg-white hover:text-surface-900 hover:shadow-sm transition-all cursor-pointer focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent-400 tabular-nums min-w-[3.5rem] text-center"
-            aria-label={`Current zoom: ${Math.round(zoom * 100)}%. Click to reset.`}
-          >
-            {Math.round(zoom * 100)}%
-          </button>
-        </Tooltip>
-
-        <Tooltip label="Zoom In" shortcut="+">
-          <button
-            type="button"
-            onClick={onZoomIn}
-            className="p-2 rounded-lg text-surface-600 hover:bg-white hover:text-surface-900 hover:shadow-sm transition-all cursor-pointer focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent-400"
-            aria-label="Zoom in"
-          >
-            <svg className="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" aria-hidden="true">
-              <path strokeLinecap="round" strokeLinejoin="round" d="M21 21l-5.197-5.197m0 0A7.5 7.5 0 1 0 5.196 5.196a7.5 7.5 0 0 0 10.607 10.607ZM10.5 7.5v6m3-3h-6" />
-            </svg>
-          </button>
-        </Tooltip>
+            Data Freeze Enforced
+          </span>
+        )}
+        {mode === 'student_edit' && (
+          <span className="text-xs text-surface-400 hidden xl:inline">
+            Click colonies to select · Drag to move · Space to pan
+          </span>
+        )}
       </div>
     </div>
   )

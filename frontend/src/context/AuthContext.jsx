@@ -26,10 +26,13 @@ export const DEMO_USERS = {
   student: {
     id: 'demo-student-01',
     username: 'student',
+    firstName: 'Alex',
+    lastName: 'Rivera',
     displayName: 'Alex Rivera',
     email: 'student@labgroup.acuity.app',
+    biography: 'Undergraduate thesis researcher focusing on automated CFU quantification and morphological analysis in bacterial cultures.',
     role: ROLES.STUDENT,
-    title: 'Thesis Researcher',
+    title: 'Student',
     tenant: 'UST - Department of Biological Sciences',
     group: 'Group 8 — Microbiology Cohort',
     authProvider: 'native',
@@ -39,8 +42,11 @@ export const DEMO_USERS = {
   faculty: {
     id: 'demo-faculty-01',
     username: 'faculty',
-    displayName: 'Dr. Maria Santos',
+    firstName: 'Prof.',
+    lastName: 'Cruz',
+    displayName: 'Prof. Cruz',
     email: 'faculty@adviser.acuity.app',
+    biography: 'Associate Professor of Microbiology advising student research cohorts on macroscopic colony verification.',
     role: ROLES.FACULTY,
     title: 'Faculty Adviser',
     tenant: 'UST - Department of Biological Sciences',
@@ -52,10 +58,13 @@ export const DEMO_USERS = {
   systemadmin: {
     id: 'demo-admin-01',
     username: 'systemadmin',
+    firstName: 'System',
+    lastName: 'Administrator',
     displayName: 'System Administrator',
     email: 'admin@acuity.app',
+    biography: 'Platform administrator for Acuity multi-tenant operations, user management, and audit log monitoring.',
     role: ROLES.SYSTEMADMIN,
-    title: 'Super User Access',
+    title: 'System Admin',
     tenant: 'University of Santo Tomas · CICS',
     group: 'Platform Administration',
     authProvider: 'native',
@@ -116,10 +125,10 @@ export function AuthProvider({ children }) {
   const isAuthenticated = Boolean(user)
 
   /**
-   * Register a new institutional student account.
+   * Register a new student/researcher account.
    * New accounts start in `verified: false` until 6-digit OTP verification is completed.
    */
-  const registerUser = useCallback(async ({ fullName, email, password }) => {
+  const registerUser = useCallback(async ({ firstName, lastName, fullName, email, password }) => {
     setIsLoading(true)
     try {
       await new Promise((resolve) => setTimeout(resolve, 350))
@@ -129,17 +138,21 @@ export function AuthProvider({ children }) {
 
       const existing = accounts.find((acc) => acc.email.toLowerCase() === trimmedEmail)
       if (existing) {
-        throw new Error('An account with this institutional email already exists.')
+        throw new Error('An account with this email already exists.')
       }
+
+      const constructedDisplayName = (fullName || `${firstName || ''} ${lastName || ''}`).trim()
 
       const newAccount = {
         id: `user-${Date.now()}`,
         username: trimmedEmail.split('@')[0],
-        displayName: fullName.trim(),
+        displayName: constructedDisplayName,
+        firstName: firstName ? firstName.trim() : constructedDisplayName.split(' ')[0] || '',
+        lastName: lastName ? lastName.trim() : constructedDisplayName.split(' ').slice(1).join(' ') || '',
         email: trimmedEmail,
         password,
         role: ROLES.STUDENT,
-        title: 'Thesis Researcher',
+        title: 'Student',
         tenant: 'University Laboratory Workspace',
         group: 'Microbiology Research Group',
         authProvider: 'native',
@@ -193,7 +206,7 @@ export function AuthProvider({ children }) {
   /**
    * Resend OTP simulation.
    */
-  const resendOtp = useCallback(async (email) => {
+  const resendOtp = useCallback(async () => {
     setIsLoading(true)
     try {
       await new Promise((resolve) => setTimeout(resolve, 300))
@@ -204,7 +217,7 @@ export function AuthProvider({ children }) {
   }, [])
 
   /**
-   * Native Sign In with Institutional Email and Password.
+   * Native Sign In with Email and Password.
    */
   const login = useCallback(async (credentials) => {
     setIsLoading(true)
@@ -212,44 +225,54 @@ export function AuthProvider({ children }) {
       await new Promise((resolve) => setTimeout(resolve, 350))
 
       if (!credentials) {
-        throw new Error('Invalid username or password')
+        throw new Error('Invalid email or password')
       }
 
-      const ident = (credentials.username || credentials.email || '').trim().toLowerCase()
+      const ident = (credentials.email || credentials.username || '').trim().toLowerCase()
       const pass = (credentials.password || '').trim()
 
       if (!ident || !pass) {
-        throw new Error('Invalid username or password')
-      }
-
-      // Check shortcuts for demo credentials
-      if ((ident === 'student' || ident === 'student@labgroup.acuity.app') && pass === 'student') {
-        setUser(DEMO_USERS.student)
-        localStorage.setItem(SESSION_STORAGE_KEY, JSON.stringify(DEMO_USERS.student))
-        return DEMO_USERS.student
-      }
-      if ((ident === 'faculty' || ident === 'faculty@adviser.acuity.app') && pass === 'faculty') {
-        setUser(DEMO_USERS.faculty)
-        localStorage.setItem(SESSION_STORAGE_KEY, JSON.stringify(DEMO_USERS.faculty))
-        return DEMO_USERS.faculty
-      }
-      if (
-        (ident === 'systemadmin' || ident === 'admin' || ident === 'admin@acuity.app') &&
-        (pass === 'systemadmin' || pass === 'admin')
-      ) {
-        setUser(DEMO_USERS.systemadmin)
-        localStorage.setItem(SESSION_STORAGE_KEY, JSON.stringify(DEMO_USERS.systemadmin))
-        return DEMO_USERS.systemadmin
+        throw new Error('Invalid email or password')
       }
 
       // Check registered accounts list
       const accounts = getStoredAccounts()
       const matched = accounts.find(
-        (acc) => acc.username?.toLowerCase() === ident || acc.email?.toLowerCase() === ident
+        (acc) => acc.email?.toLowerCase() === ident || acc.username?.toLowerCase() === ident
       )
 
+      if (matched?.deactivated) {
+        throw new Error('This account has been deactivated. Please contact your system administrator.')
+      }
+
+      // Check shortcuts for demo credentials
+      if ((ident === 'student' || ident === 'student@labgroup.acuity.app') && pass === 'student') {
+        const studentObj = { ...DEMO_USERS.student, ...(matched || {}) }
+        delete studentObj.password
+        setUser(studentObj)
+        localStorage.setItem(SESSION_STORAGE_KEY, JSON.stringify(studentObj))
+        return studentObj
+      }
+      if ((ident === 'faculty' || ident === 'faculty@adviser.acuity.app') && pass === 'faculty') {
+        const facultyObj = { ...DEMO_USERS.faculty, ...(matched || {}) }
+        delete facultyObj.password
+        setUser(facultyObj)
+        localStorage.setItem(SESSION_STORAGE_KEY, JSON.stringify(facultyObj))
+        return facultyObj
+      }
+      if (
+        (ident === 'systemadmin' || ident === 'admin' || ident === 'admin@acuity.app') &&
+        (pass === 'systemadmin' || pass === 'admin')
+      ) {
+        const adminObj = { ...DEMO_USERS.systemadmin, ...(matched || {}) }
+        delete adminObj.password
+        setUser(adminObj)
+        localStorage.setItem(SESSION_STORAGE_KEY, JSON.stringify(adminObj))
+        return adminObj
+      }
+
       if (!matched || matched.password !== pass) {
-        throw new Error('Invalid username or password')
+        throw new Error('Invalid email or password')
       }
 
       if (!matched.verified) {
@@ -303,6 +326,10 @@ export function AuthProvider({ children }) {
         )
       }
 
+      if (matched.deactivated) {
+        throw new Error('This account has been deactivated. Please contact your system administrator.')
+      }
+
       if (!matched.verified) {
         throw new Error('Your account requires email verification before accessing the workspace.')
       }
@@ -352,6 +379,94 @@ export function AuthProvider({ children }) {
     }
   }, [])
 
+  /**
+   * Update profile fields (First Name, Last Name, display_name, biography, avatar, etc.)
+   * Persists to active session and stored mock accounts.
+   */
+  const updateProfile = useCallback(async (updates) => {
+    setIsLoading(true)
+    try {
+      await new Promise((resolve) => setTimeout(resolve, 300))
+      let updatedUser = null
+      setUser((prev) => {
+        if (!prev) return null
+        updatedUser = { ...prev, ...updates }
+        try {
+          localStorage.setItem(SESSION_STORAGE_KEY, JSON.stringify(updatedUser))
+          const accounts = getStoredAccounts()
+          const idx = accounts.findIndex(
+            (acc) => acc.id === updatedUser.id || (acc.email && acc.email.toLowerCase() === updatedUser.email?.toLowerCase())
+          )
+          if (idx !== -1) {
+            accounts[idx] = { ...accounts[idx], ...updates }
+            saveStoredAccounts(accounts)
+          } else {
+            accounts.push(updatedUser)
+            saveStoredAccounts(accounts)
+          }
+        } catch {
+          // ignore
+        }
+        return updatedUser
+      })
+      return updatedUser
+    } finally {
+      setIsLoading(false)
+    }
+  }, [])
+
+  /**
+   * Change password flow: current password -> new password -> confirm new password.
+   */
+  const changePassword = useCallback(async (currentPassword, newPassword) => {
+    setIsLoading(true)
+    try {
+      await new Promise((resolve) => setTimeout(resolve, 350))
+      const accounts = getStoredAccounts()
+      const target = accounts.find(
+        (acc) => acc.id === user?.id || (acc.email && acc.email.toLowerCase() === user?.email?.toLowerCase())
+      )
+      const defaultPass = user?.role === ROLES.STUDENT ? 'student' : user?.role === ROLES.FACULTY ? 'faculty' : 'systemadmin'
+      const expectedPassword = target?.password || defaultPass
+      if (currentPassword !== expectedPassword) {
+        throw new Error('Current password is incorrect.')
+      }
+      if (target) {
+        target.password = newPassword
+        saveStoredAccounts(accounts)
+      }
+      return true
+    } finally {
+      setIsLoading(false)
+    }
+  }, [user])
+
+  /**
+   * Deactivate account flow: marks account as inactive for future logins and ends session.
+   */
+  const deactivateAccount = useCallback(async () => {
+    setIsLoading(true)
+    try {
+      await new Promise((resolve) => setTimeout(resolve, 400))
+      if (user) {
+        const accounts = getStoredAccounts()
+        const target = accounts.find(
+          (acc) => acc.id === user.id || (acc.email && acc.email.toLowerCase() === user.email?.toLowerCase())
+        )
+        if (target) {
+          target.deactivated = true
+          target.verified = false
+          saveStoredAccounts(accounts)
+        }
+      }
+      setUser(null)
+      localStorage.removeItem(SESSION_STORAGE_KEY)
+      return true
+    } finally {
+      setIsLoading(false)
+    }
+  }, [user])
+
   const value = useMemo(
     () => ({
       user,
@@ -364,8 +479,25 @@ export function AuthProvider({ children }) {
       resendOtp,
       resetPassword,
       logout,
+      updateProfile,
+      changePassword,
+      deactivateAccount,
     }),
-    [user, isAuthenticated, isLoading, login, loginWithGoogle, registerUser, verifyOtp, resendOtp, resetPassword, logout]
+    [
+      user,
+      isAuthenticated,
+      isLoading,
+      login,
+      loginWithGoogle,
+      registerUser,
+      verifyOtp,
+      resendOtp,
+      resetPassword,
+      logout,
+      updateProfile,
+      changePassword,
+      deactivateAccount,
+    ]
   )
 
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>
