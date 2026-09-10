@@ -23,8 +23,12 @@ function StatRow({ label, value, unit }) {
   )
 }
 
-export default function DetectionSummary() {
-  const { detectionSummary } = useAnnotationStore()
+export default function DetectionSummary({ plate }) {
+  const { detectionSummary, annotations } = useAnnotationStore()
+
+  const visibleAnnotations = annotations ? annotations.filter((a) => !a.softDeleted) : []
+  const totalColonies = visibleAnnotations.length > 0 ? visibleAnnotations.length : (plate?.colonyCount ?? detectionSummary.totalColonies)
+  const manualCount = visibleAnnotations.filter((a) => a.source === 'manual' || a.corrected).length
 
   return (
     <div className="bg-white rounded-xl border border-surface-200 shadow-sm overflow-hidden">
@@ -36,21 +40,21 @@ export default function DetectionSummary() {
       <div className="px-4 py-1">
         <StatRow
           label="Total Colonies"
-          value={detectionSummary.totalColonies}
+          value={totalColonies}
         />
         <StatRow
           label="Avg. Area"
-          value={detectionSummary.avgAreaMm2}
+          value={plate?.avgAreaMm2 ? String(plate.avgAreaMm2).replace(' mm²', '') : detectionSummary.avgAreaMm2}
           unit="mm²"
         />
         <StatRow
           label="Avg. Diameter"
-          value={detectionSummary.avgDiameterMm}
+          value={plate?.avgDiameterMm ? String(plate.avgDiameterMm).replace(' mm', '') : detectionSummary.avgDiameterMm}
           unit="mm"
         />
         <StatRow
           label="Manual Corrections"
-          value={detectionSummary.manualCorrections}
+          value={manualCount}
         />
       </div>
     </div>

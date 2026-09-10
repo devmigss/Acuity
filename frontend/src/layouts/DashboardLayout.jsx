@@ -22,7 +22,7 @@ export default function DashboardLayout() {
   }, [])
 
   return (
-    <div className="min-h-svh flex flex-col bg-surface-50">
+    <div className="h-screen flex flex-col overflow-hidden bg-surface-50">
       {/* ── Top Dashboard Header ── */}
       <DashboardHeader
         isMobileMenuOpen={isMobileMenuOpen}

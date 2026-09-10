@@ -11,7 +11,7 @@
 import { useState } from 'react'
 import { Link } from 'react-router-dom'
 import { ROUTES } from '@/routes/routeConstants'
-import acuityLogo from '@/assets/branding/acuity-logo.png'
+import acuityHeaderLogo from '@/assets/branding/AcuityHeader.svg'
 
 export default function Navbar({ variant = 'full' }) {
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false)
@@ -36,7 +36,7 @@ export default function Navbar({ variant = 'full' }) {
             onClick={closeMobileMenu}
           >
             <img
-              src={acuityLogo}
+              src={acuityHeaderLogo}
               alt="Acuity"
               className="h-8 sm:h-9 md:h-10 w-auto object-contain transition-transform duration-200 group-hover:scale-105"
             />

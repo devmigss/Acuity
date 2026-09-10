@@ -19,6 +19,7 @@
 import { useState } from 'react'
 import { Link, useNavigate } from 'react-router-dom'
 import { ROUTES } from '@/routes/routeConstants'
+import { validatePassword, validateConfirmPassword } from '@/utils/authValidation'
 import Button from '@/components/ui/Button'
 import Input from '@/components/ui/Input'
 
@@ -61,16 +62,14 @@ export default function ResetPasswordPage() {
   const validateForm = () => {
     const newErrors = {}
 
-    if (!formData.newPassword) {
-      newErrors.newPassword = 'New password is required'
-    } else if (formData.newPassword.length < 8) {
-      newErrors.newPassword = 'Password must be at least 8 characters'
+    const passwordError = validatePassword(formData.newPassword)
+    if (passwordError) {
+      newErrors.newPassword = passwordError
     }
 
-    if (!formData.confirmPassword) {
-      newErrors.confirmPassword = 'Confirmation password is required'
-    } else if (formData.newPassword !== formData.confirmPassword) {
-      newErrors.confirmPassword = 'Passwords do not match'
+    const confirmError = validateConfirmPassword(formData.newPassword, formData.confirmPassword)
+    if (confirmError) {
+      newErrors.confirmPassword = confirmError
     }
 
     setErrors(newErrors)

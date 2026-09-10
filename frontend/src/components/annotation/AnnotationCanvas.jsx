@@ -4,35 +4,37 @@
  * REQ: ACUITY_REQUIREMENTS.md Section 3 — human-in-the-loop annotation
  * with soft deletes. AI baseline bounding boxes are immutable.
  *
- * Renders AI-detected and manually added colony annotations on a
- * simulated Petri dish background using React-Konva.
+ * Renders AI-detected, human-corrected, and manually added colony annotations
+ * on a simulated Petri dish background using React-Konva.
  *
- * Interaction model:
- * - SELECT   : click annotation to select; background click clears selection
- * - PAN      : click+drag canvas to pan; annotations are not draggable
- * - ADD      : click background to place a new manual annotation
- * - RESIZE   : annotations are draggable (move); background click deselects
- * - DELETE   : clicking annotation soft-deletes it
- * - Spacebar : temporarily activates PAN while held (Figma-style)
- * - Scroll   : zoom toward cursor position
- * - Keyboard : V=Select, H=Pan, A=Add, R=Resize, Del=Delete (see workspace page)
- *
- * IMPORTANT:
- * - No AI inference is performed here.
- * - No scientific calculations are performed here.
- * - All colony positions/sizes are mock demonstration data.
- * - The Python FastAPI / OpenCV service will provide real data.
+ * Key Interaction Capabilities:
+ * - MOVING: Select or drag any colony (AI or manual) in SELECT or RESIZE mode.
+ *   Entire colony group (circle, center point, badge, handles) moves in sync.
+ * - RESIZING: 4 cardinal resize handles (E, S, W, N) with circular aspect ratio
+ *   preservation (no rotation, no distortion), clamped to [10, 120] normalized units.
+ * - VISUAL DISTINCTIONS:
+ *   * AI Untouched: Emerald dashed border, dark slate badge, AI confidence %.
+ *   * AI Corrected: Amber solid border, amber badge, confidence % + "Edited".
+ *   * Manual: Red solid border, red badge, "Manual".
+ * - TOOL ISOLATION:
+ *   * Pan mode (or Spacebar held) disables dragging/resizing.
+ *   * Add mode places manual colony at normalized coordinates without selecting.
+ *   * Delete mode soft-deletes clicked colony.
+ * - READ-ONLY: Supports `readOnly` prop for faculty review mode.
  */
 
 import { useRef, useCallback, useEffect, useState } from 'react'
-import { Stage, Layer, Circle, Text, Rect, Ellipse } from 'react-konva'
+import { Stage, Layer, Circle, Text, Rect, Group } from 'react-konva'
 import { useAnnotationStore, TOOLS, ANNOTATION_SOURCE } from '@/stores/annotationStore'
 
-/* ── Canvas coordinate constants (normalised space) ── */
+/* ── Canvas coordinate constants (normalised space — 1:1 square) ── */
 const CANVAS_W = 700
-const CANVAS_H = 480
-const PETRI_RX = 295
-const PETRI_RY = 210
+const CANVAS_H = 700
+const PETRI_R = 300
+
+/* ── Geometry constraints (normalized units) ── */
+const MIN_RADIUS = 10
+const MAX_RADIUS = 120
 
 /* ── Zoom limits ── */
 const MIN_ZOOM = 0.25
@@ -40,49 +42,74 @@ const MAX_ZOOM = 5.0
 const ZOOM_FACTOR = 1.08
 
 /* ─────────────────────────────────────────────────────────────
-   AnnotationMark — a single colony circle on the canvas
+   AnnotationMark — Grouped colony with synchronized dragging & handles
    ───────────────────────────────────────────────────────────── */
 
 function AnnotationMark({
   annotation,
+  layerX,
+  layerY,
+  layerRadius,
   isSelected,
-  activeTool,
-  effectiveTool,   // pan overrides activeTool cursor
+  canDrag,
+  canResize,
+  effectiveTool,
+  zoom,
   onSelect,
+  onDragStart,
   onDragEnd,
+  onResizeStart,
+  getBaseCursor,
 }) {
   const isManual = annotation.source === ANNOTATION_SOURCE.MANUAL
+  const isCorrectedAI = !isManual && Boolean(annotation.corrected)
 
-  // Annotations are only draggable in RESIZE tool (not pan, not select)
-  const isDraggable = activeTool === TOOLS.RESIZE
+  // Visual color encoding
+  let statusColor = '#10B981' // Emerald for Untouched AI
+  let labelBg     = '#0F172A' // Dark Slate
+  let strokeDash  = [6, 4]
+  let labelText   = annotation.confidence !== null ? `${Math.round(annotation.confidence * 100)}%` : 'AI'
+  let badgeWidth  = 46
 
-  // Visual encoding
-  const strokeColor  = isManual ? '#EF4444' : '#22C55E'
-  const strokeWidth  = isSelected ? 3 : 2
-  const strokeDash   = isManual ? [] : [6, 4]
-  const fillColor    = isSelected
-    ? (isManual ? 'rgba(239,68,68,0.12)' : 'rgba(34,197,94,0.12)')
+  if (isManual) {
+    statusColor = '#EF4444' // Red for Manual
+    labelBg     = '#EF4444'
+    strokeDash  = []
+    labelText   = 'Manual'
+    badgeWidth  = 54
+  } else if (isCorrectedAI) {
+    statusColor = '#F59E0B' // Amber for Corrected AI
+    labelBg     = '#D97706'
+    strokeDash  = []
+    labelText   = `${Math.round(annotation.confidence * 100)}% • Edited`
+    badgeWidth  = 84
+  }
+
+  const strokeWidth = isSelected ? 3 : 2
+  const fillColor = isSelected
+    ? isManual
+      ? 'rgba(239,68,68,0.12)'
+      : isCorrectedAI
+      ? 'rgba(245,158,11,0.14)'
+      : 'rgba(16,185,129,0.12)'
     : 'transparent'
 
   // Cursor per effective tool + hover context
-  const getHoverCursor = () => {
+  const getColonyCursor = () => {
     if (effectiveTool === TOOLS.PAN) return 'grab'
     if (effectiveTool === TOOLS.DELETE) return 'pointer'
-    if (isDraggable) return 'move'
+    if (canDrag) return 'move'
     if (effectiveTool === TOOLS.SELECT) return 'pointer'
     return 'default'
   }
 
   const handleClick = useCallback((e) => {
-    // Consume the event so stage click-on-bg doesn't also fire
     e.cancelBubble = true
 
-    if (effectiveTool === TOOLS.PAN) return   // pan mode never selects
-    if (effectiveTool === TOOLS.ADD) return    // add mode never selects
+    if (effectiveTool === TOOLS.PAN) return
+    if (effectiveTool === TOOLS.ADD) return
 
     if (effectiveTool === TOOLS.DELETE) {
-      // Soft-delete on annotation click in DELETE mode
-      // We call the store action through onSelect with a sentinel
       onSelect(annotation.id, 'delete')
       return
     }
@@ -90,68 +117,78 @@ function AnnotationMark({
     onSelect(annotation.id)
   }, [annotation.id, effectiveTool, onSelect])
 
+  const handleDragStart = useCallback((e) => {
+    e.cancelBubble = true
+    onDragStart?.(annotation.id)
+  }, [annotation.id, onDragStart])
+
   const handleDragEnd = useCallback((e) => {
+    e.cancelBubble = true
     onDragEnd(annotation.id, { x: e.target.x(), y: e.target.y() })
   }, [annotation.id, onDragEnd])
 
-  const labelBg   = isManual ? '#EF4444' : '#1E293B'
-  const labelText = annotation.confidence !== null
-    ? annotation.confidence.toFixed(2)
-    : 'manual'
+  // Resize handle radius — scales gently with zoom to remain easily clickable
+  const handleRadius = Math.max(4.5, 6 / Math.sqrt(zoom))
 
   return (
-    <>
-      {/* Colony circle */}
+    <Group
+      x={layerX}
+      y={layerY}
+      draggable={canDrag}
+      onClick={handleClick}
+      onTap={handleClick}
+      onDragStart={handleDragStart}
+      onDragEnd={handleDragEnd}
+      onMouseEnter={(e) => {
+        const stage = e.target.getStage()
+        if (stage) stage.container().style.cursor = getColonyCursor()
+      }}
+      onMouseLeave={(e) => {
+        const stage = e.target.getStage()
+        if (stage) stage.container().style.cursor = getBaseCursor()
+      }}
+    >
+      {/* ── Colony Circle ── */}
       <Circle
-        x={annotation.x}
-        y={annotation.y}
-        radius={annotation.radius}
+        x={0}
+        y={0}
+        radius={layerRadius}
         fill={fillColor}
-        stroke={strokeColor}
+        stroke={statusColor}
         strokeWidth={strokeWidth}
         dash={strokeDash}
-        draggable={isDraggable}
-        onClick={handleClick}
-        onTap={handleClick}
-        onDragEnd={handleDragEnd}
-        onMouseEnter={(e) => {
-          const stage = e.target.getStage()
-          if (stage) stage.container().style.cursor = getHoverCursor()
-        }}
-        onMouseLeave={(e) => {
-          const stage = e.target.getStage()
-          if (!stage) return
-          // Restore base cursor for current effective tool
-          if (effectiveTool === TOOLS.PAN) {
-            stage.container().style.cursor = 'grab'
-          } else if (effectiveTool === TOOLS.ADD) {
-            stage.container().style.cursor = 'crosshair'
-          } else {
-            stage.container().style.cursor = 'default'
-          }
-        }}
         perfectDrawEnabled={false}
       />
 
-      {/* Selection ring */}
+      {/* ── Selection Ring + Center Pivot Dot ── */}
       {isSelected && (
-        <Circle
-          x={annotation.x}
-          y={annotation.y}
-          radius={annotation.radius + 6}
-          stroke={isManual ? '#EF4444' : '#22C55E'}
-          strokeWidth={1.5}
-          dash={[3, 3]}
-          listening={false}
-          perfectDrawEnabled={false}
-        />
+        <>
+          <Circle
+            x={0}
+            y={0}
+            radius={layerRadius + 5}
+            stroke={statusColor}
+            strokeWidth={1.5}
+            dash={[3, 3]}
+            listening={false}
+            perfectDrawEnabled={false}
+          />
+          <Circle
+            x={0}
+            y={0}
+            radius={2.5}
+            fill={statusColor}
+            listening={false}
+            perfectDrawEnabled={false}
+          />
+        </>
       )}
 
-      {/* Confidence / source badge */}
+      {/* ── Metadata Badge (Centered above colony) ── */}
       <Rect
-        x={annotation.x - annotation.radius}
-        y={annotation.y - annotation.radius - 24}
-        width={isManual ? 56 : 44}
+        x={-badgeWidth / 2}
+        y={-layerRadius - 23}
+        width={badgeWidth}
         height={18}
         fill={labelBg}
         cornerRadius={4}
@@ -159,9 +196,9 @@ function AnnotationMark({
         perfectDrawEnabled={false}
       />
       <Text
-        x={annotation.x - annotation.radius}
-        y={annotation.y - annotation.radius - 22}
-        width={isManual ? 56 : 44}
+        x={-badgeWidth / 2}
+        y={-layerRadius - 21}
+        width={badgeWidth}
         text={labelText}
         align="center"
         fontSize={10}
@@ -171,7 +208,112 @@ function AnnotationMark({
         perfectDrawEnabled={false}
         fontFamily="Inter, monospace"
       />
-    </>
+
+      {/* ── Cardinal Circular Resize Handles (E, S, W, N) ── */}
+      {isSelected && canResize && (
+        <>
+          {/* East Handle */}
+          <Circle
+            x={layerRadius}
+            y={0}
+            radius={handleRadius}
+            fill="#FFFFFF"
+            stroke={statusColor}
+            strokeWidth={2}
+            shadowColor="rgba(0, 0, 0, 0.25)"
+            shadowBlur={3}
+            shadowOffset={{ x: 0, y: 1 }}
+            onMouseDown={(e) => {
+              e.cancelBubble = true
+              onResizeStart(annotation.id, 'e', layerX, layerY, layerRadius)
+            }}
+            onMouseEnter={(e) => {
+              const stage = e.target.getStage()
+              if (stage) stage.container().style.cursor = 'ew-resize'
+            }}
+            onMouseLeave={(e) => {
+              const stage = e.target.getStage()
+              if (stage) stage.container().style.cursor = getColonyCursor()
+            }}
+          />
+
+          {/* South Handle */}
+          <Circle
+            x={0}
+            y={layerRadius}
+            radius={handleRadius}
+            fill="#FFFFFF"
+            stroke={statusColor}
+            strokeWidth={2}
+            shadowColor="rgba(0, 0, 0, 0.25)"
+            shadowBlur={3}
+            shadowOffset={{ x: 0, y: 1 }}
+            onMouseDown={(e) => {
+              e.cancelBubble = true
+              onResizeStart(annotation.id, 's', layerX, layerY, layerRadius)
+            }}
+            onMouseEnter={(e) => {
+              const stage = e.target.getStage()
+              if (stage) stage.container().style.cursor = 'ns-resize'
+            }}
+            onMouseLeave={(e) => {
+              const stage = e.target.getStage()
+              if (stage) stage.container().style.cursor = getColonyCursor()
+            }}
+          />
+
+          {/* West Handle */}
+          <Circle
+            x={-layerRadius}
+            y={0}
+            radius={handleRadius}
+            fill="#FFFFFF"
+            stroke={statusColor}
+            strokeWidth={2}
+            shadowColor="rgba(0, 0, 0, 0.25)"
+            shadowBlur={3}
+            shadowOffset={{ x: 0, y: 1 }}
+            onMouseDown={(e) => {
+              e.cancelBubble = true
+              onResizeStart(annotation.id, 'w', layerX, layerY, layerRadius)
+            }}
+            onMouseEnter={(e) => {
+              const stage = e.target.getStage()
+              if (stage) stage.container().style.cursor = 'ew-resize'
+            }}
+            onMouseLeave={(e) => {
+              const stage = e.target.getStage()
+              if (stage) stage.container().style.cursor = getColonyCursor()
+            }}
+          />
+
+          {/* North Handle */}
+          <Circle
+            x={0}
+            y={-layerRadius}
+            radius={handleRadius}
+            fill="#FFFFFF"
+            stroke={statusColor}
+            strokeWidth={2}
+            shadowColor="rgba(0, 0, 0, 0.25)"
+            shadowBlur={3}
+            shadowOffset={{ x: 0, y: 1 }}
+            onMouseDown={(e) => {
+              e.cancelBubble = true
+              onResizeStart(annotation.id, 'n', layerX, layerY, layerRadius)
+            }}
+            onMouseEnter={(e) => {
+              const stage = e.target.getStage()
+              if (stage) stage.container().style.cursor = 'ns-resize'
+            }}
+            onMouseLeave={(e) => {
+              const stage = e.target.getStage()
+              if (stage) stage.container().style.cursor = getColonyCursor()
+            }}
+          />
+        </>
+      )}
+    </Group>
   )
 }
 
@@ -179,7 +321,10 @@ function AnnotationMark({
    Main AnnotationCanvas
    ───────────────────────────────────────────────────────────── */
 
-export default function AnnotationCanvas({ onSpacebarPanChange }) {
+export default function AnnotationCanvas({
+  onSpacebarPanChange,
+  readOnly = false,
+}) {
   const {
     getVisibleAnnotations,
     selectedAnnotationId,
@@ -195,29 +340,33 @@ export default function AnnotationCanvas({ onSpacebarPanChange }) {
     deleteAnnotation,
   } = useAnnotationStore()
 
-  const stageRef    = useRef(null)
+  const stageRef     = useRef(null)
   const containerRef = useRef(null)
   const [stageSize, setStageSize] = useState({ w: CANVAS_W, h: CANVAS_H })
 
   // ── Spacebar temporary pan ──
   const [isSpacePanning, setIsSpacePanning] = useState(false)
   const spaceHeldRef = useRef(false)
-  const prevToolRef  = useRef(null)
 
   // ── Canvas drag-pan state ──
   const isPanDragging  = useRef(false)
   const panStartPos    = useRef({ x: 0, y: 0 })
   const panStartOffset = useRef({ x: 0, y: 0 })
 
+  // ── Circular Resize state ──
+  // resizing: { id, direction, colonyLayerX, colonyLayerY, initialRadiusPx }
+  const [resizing, setResizing] = useState(null)
+  const [previewRadius, setPreviewRadius] = useState(null)
+
   // Effective tool: spacebar overrides to PAN temporarily
   const effectiveTool = isSpacePanning ? TOOLS.PAN : activeTool
 
-  /* ── Responsive resize ── */
+  /* ── Responsive resize (1:1 square Petri dish container) ── */
   useEffect(() => {
     const observer = new ResizeObserver((entries) => {
       for (const entry of entries) {
         const w = entry.contentRect.width
-        if (w > 0) setStageSize({ w, h: Math.max(320, w * 0.65) })
+        if (w > 0) setStageSize({ w, h: w })
       }
     })
     if (containerRef.current) observer.observe(containerRef.current)
@@ -227,11 +376,9 @@ export default function AnnotationCanvas({ onSpacebarPanChange }) {
   /* ── Spacebar: temporary pan (Figma-style) ── */
   useEffect(() => {
     const onKeyDown = (e) => {
-      // Only when the canvas container (or body) is focused; prevent browser scroll
       if (e.code === 'Space' && !spaceHeldRef.current && !e.target.matches('input, textarea, button')) {
         e.preventDefault()
         spaceHeldRef.current = true
-        prevToolRef.current  = activeTool
         setIsSpacePanning(true)
         onSpacebarPanChange?.(true)
       }
@@ -242,8 +389,6 @@ export default function AnnotationCanvas({ onSpacebarPanChange }) {
         spaceHeldRef.current = false
         setIsSpacePanning(false)
         onSpacebarPanChange?.(false)
-        // Tool automatically reverts because effectiveTool uses isSpacePanning,
-        // and the store activeTool was never changed.
       }
     }
     window.addEventListener('keydown', onKeyDown)
@@ -252,9 +397,9 @@ export default function AnnotationCanvas({ onSpacebarPanChange }) {
       window.removeEventListener('keydown', onKeyDown)
       window.removeEventListener('keyup', onKeyUp)
     }
-  }, [activeTool, onSpacebarPanChange])
+  }, [onSpacebarPanChange])
 
-  /* ── Stage cursor ── */
+  /* ── Stage base cursor ── */
   const getBaseCursor = useCallback(() => {
     switch (effectiveTool) {
       case TOOLS.PAN:    return 'grab'
@@ -270,6 +415,61 @@ export default function AnnotationCanvas({ onSpacebarPanChange }) {
     const stage = stageRef.current
     if (stage) stage.container().style.cursor = getBaseCursor()
   }, [effectiveTool, getBaseCursor])
+
+  /* ── Scale factors between normalized space (700x480) and canvas px ── */
+  const canvasWidth  = stageSize.w
+  const canvasHeight = stageSize.h
+  const scaleXFactor = canvasWidth / CANVAS_W
+  const scaleYFactor = canvasHeight / CANVAS_H
+  const scaleRadius  = Math.min(scaleXFactor, scaleYFactor)
+
+  /* ── Circular Resize Pointer Move & Up Handlers ── */
+  useEffect(() => {
+    if (!resizing) return
+
+    const handleWindowMouseMove = () => {
+      const stage = stageRef.current
+      if (!stage) return
+      const pointer = stage.getPointerPosition()
+      if (!pointer) return
+
+      // Convert pointer from stage viewport space to layer space
+      const layerPointerX = (pointer.x - stageOffset.x) / zoom
+      const layerPointerY = (pointer.y - stageOffset.y) / zoom
+
+      let newRadiusPx = resizing.initialRadiusPx
+      if (resizing.direction === 'e') {
+        newRadiusPx = layerPointerX - resizing.colonyLayerX
+      } else if (resizing.direction === 'w') {
+        newRadiusPx = resizing.colonyLayerX - layerPointerX
+      } else if (resizing.direction === 's') {
+        newRadiusPx = layerPointerY - resizing.colonyLayerY
+      } else if (resizing.direction === 'n') {
+        newRadiusPx = resizing.colonyLayerY - layerPointerY
+      }
+
+      // Convert px to normalized base radius and clamp
+      const normRadius = newRadiusPx / scaleRadius
+      const clampedRadius = Math.max(MIN_RADIUS, Math.min(MAX_RADIUS, Math.round(normRadius * 10) / 10))
+
+      setPreviewRadius({ id: resizing.id, radius: clampedRadius })
+    }
+
+    const handleWindowMouseUp = () => {
+      if (previewRadius && previewRadius.id === resizing.id) {
+        updateAnnotation(resizing.id, { radius: previewRadius.radius })
+      }
+      setResizing(null)
+      setPreviewRadius(null)
+    }
+
+    window.addEventListener('mousemove', handleWindowMouseMove)
+    window.addEventListener('mouseup', handleWindowMouseUp)
+    return () => {
+      window.removeEventListener('mousemove', handleWindowMouseMove)
+      window.removeEventListener('mouseup', handleWindowMouseUp)
+    }
+  }, [resizing, previewRadius, stageOffset, zoom, scaleRadius, updateAnnotation])
 
   /* ── Wheel zoom (zoom toward cursor) ── */
   const handleWheel = useCallback((e) => {
@@ -299,11 +499,9 @@ export default function AnnotationCanvas({ onSpacebarPanChange }) {
   }, [zoom, stageOffset, setZoom, setStageOffset])
 
   /* ── Stage pointer events for pan drag ── */
-  const handleStageMouseDown = useCallback((e) => {
+  const handleStageMouseDown = useCallback(() => {
     if (effectiveTool !== TOOLS.PAN) return
-    // Only start panning if clicking on background (not an annotation)
-    const target = e.target
-    const stage  = stageRef.current
+    const stage = stageRef.current
     if (!stage) return
 
     isPanDragging.current  = true
@@ -334,9 +532,8 @@ export default function AnnotationCanvas({ onSpacebarPanChange }) {
     if (stage) stage.container().style.cursor = 'grab'
   }, [])
 
-  /* ── Stage click (background) ── */
+  /* ── Stage click (background click) ── */
   const handleStageClick = useCallback((e) => {
-    // Don't handle if we just finished a pan drag (mousedown+move+mouseup)
     if (isPanDragging.current) return
 
     const stage = e.target.getStage()
@@ -344,51 +541,80 @@ export default function AnnotationCanvas({ onSpacebarPanChange }) {
 
     if (!isBackgroundClick) return
 
-    if (effectiveTool === TOOLS.ADD) {
+    if (effectiveTool === TOOLS.ADD && !readOnly) {
       const pos = stage.getPointerPosition()
-      const x   = (pos.x - stageOffset.x) / zoom
-      const y   = (pos.y - stageOffset.y) / zoom
-      addAnnotation(x, y)
+      const layerX = (pos.x - stageOffset.x) / zoom
+      const layerY = (pos.y - stageOffset.y) / zoom
+      const normX  = layerX / scaleXFactor
+      const normY  = layerY / scaleYFactor
+      addAnnotation(normX, normY)
       return
     }
 
-    if (effectiveTool === TOOLS.PAN) return  // pan doesn't clear selection
+    if (effectiveTool === TOOLS.PAN) return
 
     clearSelection()
-  }, [effectiveTool, zoom, stageOffset, addAnnotation, clearSelection])
+  }, [effectiveTool, readOnly, zoom, stageOffset, scaleXFactor, scaleYFactor, addAnnotation, clearSelection])
 
-  /* ── Annotation select / delete handler ── */
+  /* ── Annotation selection / deletion ── */
   const handleAnnotationSelect = useCallback((id, action) => {
     if (action === 'delete') {
-      deleteAnnotation(id)
+      if (!readOnly) deleteAnnotation(id)
       return
     }
     selectAnnotation(id)
-  }, [selectAnnotation, deleteAnnotation])
+  }, [readOnly, selectAnnotation, deleteAnnotation])
 
+  /* ── Drag start (auto-select) ── */
+  const handleAnnotationDragStart = useCallback((id) => {
+    if (selectedAnnotationId !== id) {
+      selectAnnotation(id)
+    }
+  }, [selectedAnnotationId, selectAnnotation])
+
+  /* ── Drag end (commit normalized coordinates) ── */
   const handleAnnotationDragEnd = useCallback((id, scaledPos) => {
-    // Scale back from canvas px → normalised coordinates
     updateAnnotation(id, {
-      x: scaledPos.x / (stageSize.w / CANVAS_W),
-      y: scaledPos.y / (stageSize.h / CANVAS_H),
+      x: Math.round((scaledPos.x / scaleXFactor) * 10) / 10,
+      y: Math.round((scaledPos.y / scaleYFactor) * 10) / 10,
     })
-  }, [updateAnnotation, stageSize])
+  }, [updateAnnotation, scaleXFactor, scaleYFactor])
 
-  /* ── Derived values ── */
-  const annotations  = getVisibleAnnotations()
-  const canvasWidth  = stageSize.w
-  const canvasHeight = stageSize.h
+  /* ── Resize start callback ── */
+  const handleResizeStart = useCallback((id, direction, colonyLayerX, colonyLayerY, initialRadiusPx) => {
+    if (readOnly) return
+    setResizing({
+      id,
+      direction,
+      colonyLayerX,
+      colonyLayerY,
+      initialRadiusPx,
+    })
+  }, [readOnly])
+
+  /* ── Tool permissions ── */
+  // Colonies are draggable in SELECT and RESIZE modes when not in pan/spacebar pan and not read-only
+  const canDragColonies = !readOnly &&
+    effectiveTool !== TOOLS.PAN &&
+    effectiveTool !== TOOLS.ADD &&
+    effectiveTool !== TOOLS.DELETE &&
+    (activeTool === TOOLS.SELECT || activeTool === TOOLS.RESIZE)
+
+  const canResizeColonies = !readOnly &&
+    effectiveTool !== TOOLS.PAN &&
+    (activeTool === TOOLS.SELECT || activeTool === TOOLS.RESIZE)
+
+  /* ── Derived Petri dimensions (1:1 circular ROI) ── */
+  const annotations = getVisibleAnnotations()
   const petriCX = canvasWidth  / 2
   const petriCY = canvasHeight / 2
-  const petriRX = PETRI_RX * (canvasWidth  / CANVAS_W)
-  const petriRY = PETRI_RY * (canvasHeight / CANVAS_H)
+  const petriRadiusPx = PETRI_R * scaleRadius
 
   return (
     <div
       ref={containerRef}
-      className="w-full rounded-xl overflow-hidden border border-surface-200 bg-[#E8EFF5] shadow-sm select-none"
-      style={{ minHeight: 320, touchAction: 'none' }}
-      // Prevent spacebar scroll on the wrapper div
+      className="w-full max-w-[620px] aspect-square mx-auto rounded-2xl overflow-hidden border border-surface-200 bg-[#E8EFF5] shadow-sm select-none relative"
+      style={{ touchAction: 'none' }}
       onKeyDown={(e) => { if (e.code === 'Space') e.preventDefault() }}
     >
       <Stage
@@ -405,12 +631,11 @@ export default function AnnotationCanvas({ onSpacebarPanChange }) {
         onMouseDown={handleStageMouseDown}
         onMouseMove={handleStageMouseMove}
         onMouseUp={handleStageMouseUp}
-        onMouseLeave={handleStageMouseUp}  // end pan if cursor leaves canvas
+        onMouseLeave={handleStageMouseUp}
         style={{ display: 'block', cursor: getBaseCursor() }}
       >
         {/* ── Background + Petri Dish Layer ── */}
         <Layer listening={false}>
-          {/* Full canvas fill — prevents "gaps" when zoomed/panned */}
           <Rect
             x={(-stageOffset.x) / zoom - 2000}
             y={(-stageOffset.y) / zoom - 2000}
@@ -421,38 +646,35 @@ export default function AnnotationCanvas({ onSpacebarPanChange }) {
             perfectDrawEnabled={false}
           />
 
-          {/* Petri dish outer plastic rim */}
-          <Ellipse
+          {/* Petri dish outer rim (circular) */}
+          <Circle
             x={petriCX}
             y={petriCY}
-            radiusX={petriRX}
-            radiusY={petriRY}
+            radius={petriRadiusPx}
             fill="transparent"
             stroke="#C4CEDB"
             strokeWidth={12}
             perfectDrawEnabled={false}
           />
 
-          {/* Petri dish agar surface */}
-          <Ellipse
+          {/* Petri dish agar surface (circular) */}
+          <Circle
             x={petriCX}
             y={petriCY}
-            radiusX={petriRX - 8}
-            radiusY={petriRY - 8}
+            radius={petriRadiusPx - 8}
             fill="#F0F4F8"
             stroke="#D0DCEA"
             strokeWidth={1.5}
             perfectDrawEnabled={false}
           />
 
-          {/* Subtle agar texture rings */}
+          {/* Subtle agar rings (circular) */}
           {[0.6, 0.85].map((r, i) => (
-            <Ellipse
+            <Circle
               key={i}
               x={petriCX}
               y={petriCY}
-              radiusX={(petriRX - 8) * r}
-              radiusY={(petriRY - 8) * r}
+              radius={(petriRadiusPx - 8) * r}
               fill="transparent"
               stroke="#E4ECF3"
               strokeWidth={0.8}
@@ -461,7 +683,7 @@ export default function AnnotationCanvas({ onSpacebarPanChange }) {
           ))}
         </Layer>
 
-        {/* ── Click-interceptor for background (ADD / PAN / deselect) ── */}
+        {/* ── Click-interceptor for background ── */}
         <Layer>
           <Rect
             x={(-stageOffset.x) / zoom - 2000}
@@ -476,22 +698,36 @@ export default function AnnotationCanvas({ onSpacebarPanChange }) {
 
         {/* ── Annotation Layer ── */}
         <Layer>
-          {annotations.map((annotation) => (
-            <AnnotationMark
-              key={annotation.id}
-              annotation={{
-                ...annotation,
-                x:      annotation.x      * (canvasWidth  / CANVAS_W),
-                y:      annotation.y      * (canvasHeight / CANVAS_H),
-                radius: annotation.radius * Math.min(canvasWidth / CANVAS_W, canvasHeight / CANVAS_H),
-              }}
-              isSelected={selectedAnnotationId === annotation.id}
-              activeTool={activeTool}
-              effectiveTool={effectiveTool}
-              onSelect={handleAnnotationSelect}
-              onDragEnd={handleAnnotationDragEnd}
-            />
-          ))}
+          {annotations.map((annotation) => {
+            const isSelected = selectedAnnotationId === annotation.id
+            const activeRadius = (previewRadius && previewRadius.id === annotation.id)
+              ? previewRadius.radius
+              : annotation.radius
+
+            const layerX      = annotation.x * scaleXFactor
+            const layerY      = annotation.y * scaleYFactor
+            const layerRadius = activeRadius * scaleRadius
+
+            return (
+              <AnnotationMark
+                key={annotation.id}
+                annotation={annotation}
+                layerX={layerX}
+                layerY={layerY}
+                layerRadius={layerRadius}
+                isSelected={isSelected}
+                canDrag={canDragColonies}
+                canResize={canResizeColonies}
+                effectiveTool={effectiveTool}
+                zoom={zoom}
+                onSelect={handleAnnotationSelect}
+                onDragStart={handleAnnotationDragStart}
+                onDragEnd={handleAnnotationDragEnd}
+                onResizeStart={handleResizeStart}
+                getBaseCursor={getBaseCursor}
+              />
+            )
+          })}
         </Layer>
       </Stage>
     </div>

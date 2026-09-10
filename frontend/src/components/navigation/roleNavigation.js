@@ -10,8 +10,8 @@ import { ROLES } from '@/constants/roles'
 
 export const ROLE_NAV_CONFIGS = {
   [ROLES.STUDENT]: {
-    sectionTitle: 'Student Dashboard',
-    roleLabel: 'Thesis Researcher',
+    sectionTitle: 'Student Workspace',
+    roleLabel: 'Student',
     defaultRoute: ROUTES.STUDENT.DASHBOARD,
     navItems: [
       {
@@ -82,8 +82,8 @@ export const ROLE_NAV_CONFIGS = {
   },
 
   [ROLES.SYSTEMADMIN]: {
-    sectionTitle: 'System Administrator',
-    roleLabel: 'Super User Access',
+    sectionTitle: 'System Administration',
+    roleLabel: 'System Admin',
     defaultRoute: ROUTES.ADMIN.OVERVIEW,
     navItems: [
       {

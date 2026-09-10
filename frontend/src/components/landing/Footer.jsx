@@ -7,7 +7,7 @@
 
 import { Link } from 'react-router-dom'
 import { ROUTES } from '@/routes/routeConstants'
-import acuityLogo from '@/assets/branding/acuity-logo.png'
+import acuityFooterLogo from '@/assets/branding/AcuityFooter.svg'
 
 export default function Footer() {
   const currentYear = new Date().getFullYear()
@@ -24,7 +24,7 @@ export default function Footer() {
             aria-label="Acuity — Home"
           >
             <img
-              src={acuityLogo}
+              src={acuityFooterLogo}
               alt="Acuity"
               className="h-7 sm:h-8 md:h-9 w-auto object-contain transition-transform group-hover:scale-105"
             />

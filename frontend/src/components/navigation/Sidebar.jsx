@@ -10,6 +10,7 @@
 
 import { useLocation, NavLink } from 'react-router-dom'
 import { useAuth } from '@/context/AuthContext'
+import { ROUTES } from '@/routes/routeConstants'
 import { ROLE_NAV_CONFIGS } from '@/components/navigation/roleNavigation'
 import { ROLES } from '@/constants/roles'
 import { useToastStore } from '@/store/useToastStore'
@@ -131,37 +132,14 @@ export default function Sidebar({ isOpen, onClose }) {
           fixed top-16 bottom-0 left-0 z-40 w-64 bg-white border-r border-surface-200
           flex flex-col justify-between py-5 px-3.5
           transition-transform duration-200 ease-in-out
-          lg:translate-x-0 lg:static lg:top-0 lg:min-h-[calc(100vh-4rem)]
+          lg:translate-x-0 lg:static lg:h-full lg:shrink-0
           ${isOpen ? 'translate-x-0' : '-translate-x-full'}
         `}
         aria-label="Dashboard sidebar"
       >
-        <div className="flex flex-col flex-1 overflow-y-auto">
-          {/* User Profile Info Header (Matching Reference Design) */}
-          <div className="flex items-center gap-3 px-2 pb-4 mb-4 border-b border-surface-200/80">
-            {user?.avatar ? (
-              <img
-                src={user.avatar}
-                alt={user.displayName || 'User'}
-                className="w-10 h-10 rounded-full object-cover border border-surface-200 shrink-0 shadow-2xs"
-              />
-            ) : (
-              <div className="w-10 h-10 rounded-full bg-primary-100 text-primary-700 flex items-center justify-center font-bold text-sm shrink-0 border border-primary-200">
-                {user?.displayName ? user.displayName.charAt(0) : 'U'}
-              </div>
-            )}
-            <div className="min-w-0 flex-1">
-              <h2 className="text-sm font-bold text-surface-900 truncate tracking-tight">
-                {user?.displayName || 'Acuity User'}
-              </h2>
-              <p className="text-xs text-surface-500 truncate font-normal">
-                {user?.title || navConfig.roleLabel}
-              </p>
-            </div>
-          </div>
-
-          {/* Section Header (In Acuity Gold) */}
-          <div className="px-3 mb-2">
+        <div className="flex flex-col flex-1 overflow-y-auto min-h-0">
+          {/* Section Header */}
+          <div className="px-3 mb-2.5">
             <span className="text-xs font-bold uppercase tracking-wider text-accent-600">
               {navConfig.sectionTitle}
             </span>
@@ -209,62 +187,45 @@ export default function Sidebar({ isOpen, onClose }) {
               )
             })}
           </nav>
-
-          {/* ACCOUNT Section */}
-          <div className="mt-6">
-            <div className="px-3 mb-2">
-              <span className="text-[11px] font-bold uppercase tracking-wider text-surface-400">
-                Account
-              </span>
-            </div>
-            <nav className="space-y-1" aria-label="Account section navigation">
-              {navConfig.accountItems.map((item) => {
-                const isActive = location.pathname === item.path
-
-                return (
-                  <NavLink
-                    key={item.id}
-                    to={item.path}
-                    onClick={onClose}
-                    className={`
-                      group flex items-center justify-between px-3.5 py-2.5 rounded-xl text-sm font-medium transition-all duration-150
-                      ${
-                        isActive
-                          ? 'bg-[#D5E3F7] text-[#0B1F3A] font-semibold shadow-2xs'
-                          : 'text-surface-600 hover:text-surface-900 hover:bg-surface-100/80'
-                      }
-                    `}
-                  >
-                    <div className="flex items-center gap-3 truncate">
-                      <span
-                        className={`
-                          transition-colors
-                          ${isActive ? 'text-[#0B1F3A]' : 'text-surface-400 group-hover:text-surface-600'}
-                        `}
-                      >
-                        <NavIcon id={item.id} className="w-5 h-5 shrink-0" />
-                      </span>
-                      <span className="truncate">{item.label}</span>
-                    </div>
-
-                    {isActive && (
-                      <span className="w-1.5 h-1.5 rounded-full bg-accent-400 shrink-0" aria-hidden="true" />
-                    )}
-                  </NavLink>
-                )
-              })}
-            </nav>
-          </div>
         </div>
 
-        {/* Bottom Section with Divider (Support & Logout) */}
-        <div className="pt-4 mt-4 border-t border-surface-200/80 space-y-1">
+        {/* Bottom Utility Section with Divider (Settings, Support & Logout) */}
+        <div className="pt-3.5 mt-auto border-t border-surface-200/80 space-y-1 shrink-0">
+          <NavLink
+            to={ROUTES.SETTINGS}
+            onClick={onClose}
+            className={`
+              group flex items-center justify-between px-3.5 py-2.5 rounded-xl text-sm font-medium transition-all duration-150
+              ${
+                location.pathname === ROUTES.SETTINGS
+                  ? 'bg-[#D5E3F7] text-[#0B1F3A] font-semibold shadow-2xs'
+                  : 'text-surface-600 hover:text-surface-900 hover:bg-surface-100/80'
+              }
+            `}
+          >
+            <div className="flex items-center gap-3 truncate">
+              <span
+                className={`
+                  transition-colors
+                  ${location.pathname === ROUTES.SETTINGS ? 'text-[#0B1F3A]' : 'text-surface-400 group-hover:text-surface-600'}
+                `}
+              >
+                <NavIcon id="settings" className="w-5 h-5 shrink-0" />
+              </span>
+              <span className="truncate">Settings</span>
+            </div>
+
+            {location.pathname === ROUTES.SETTINGS && (
+              <span className="w-1.5 h-1.5 rounded-full bg-accent-400 shrink-0" aria-hidden="true" />
+            )}
+          </NavLink>
+
           <button
             type="button"
             onClick={() => {
               useToastStore.getState().addToast('Support: Contact your university faculty administrator or email support@acuity.app.')
             }}
-            className="w-full flex items-center gap-3 px-3.5 py-2 rounded-xl text-sm font-medium text-surface-600 hover:text-surface-900 hover:bg-surface-100/80 transition-colors cursor-pointer text-left"
+            className="w-full flex items-center gap-3 px-3.5 py-2.5 rounded-xl text-sm font-medium text-surface-600 hover:text-surface-900 hover:bg-surface-100/80 transition-colors cursor-pointer text-left"
           >
             <NavIcon id="support" className="w-5 h-5 text-surface-400" />
             <span>Support</span>
@@ -273,7 +234,7 @@ export default function Sidebar({ isOpen, onClose }) {
           <button
             type="button"
             onClick={handleLogout}
-            className="w-full flex items-center gap-3 px-3.5 py-2 rounded-xl text-sm font-semibold text-danger-600 hover:text-danger-700 hover:bg-danger-50 transition-colors cursor-pointer text-left"
+            className="w-full flex items-center gap-3 px-3.5 py-2.5 rounded-xl text-sm font-semibold text-danger-600 hover:text-danger-700 hover:bg-danger-50 transition-colors cursor-pointer text-left"
           >
             <NavIcon id="logout" className="w-5 h-5 text-danger-500" />
             <span>Logout</span>

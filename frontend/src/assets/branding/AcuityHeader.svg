@@ -1,0 +1,74 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 420 100" width="100%" height="100%">
+  <defs>
+    <linearGradient id="eyeBlueGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#38bdf8"/>
+      <stop offset="50%" stop-color="#0284c7"/>
+      <stop offset="100%" stop-color="#0369a1"/>
+    </linearGradient>
+    <linearGradient id="lensGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#e0f2fe"/>
+      <stop offset="50%" stop-color="#0284c7"/>
+      <stop offset="100%" stop-color="#0c4a6e"/>
+    </linearGradient>
+    <linearGradient id="textGrad" x1="0%" y1="0%" x2="100%" y2="0%">
+      <stop offset="0%" stop-color="#f8fafc"/>
+      <stop offset="70%" stop-color="#e2e8f0"/>
+      <stop offset="100%" stop-color="#94a3b8"/>
+    </linearGradient>
+    <filter id="softGlow" x="-20%" y="-20%" width="140%" height="140%">
+      <feGaussianBlur stdDeviation="1.2" result="blur"/>
+      <feComposite in="SourceGraphic" in2="blur" operator="over"/>
+    </filter>
+  </defs>
+
+  <!-- Left Emblem: Eye & Lens (x: 10 to 120, y: 15 to 85) -->
+  <g transform="translate(10, 0)">
+    <!-- Eye Contour -->
+    <path d="M 12 50 C 30 22, 78 22, 96 50 C 78 78, 30 78, 12 50 Z" 
+          fill="none" 
+          stroke="url(#eyeBlueGrad)" 
+          stroke-width="6" 
+          stroke-linecap="round" 
+          stroke-linejoin="round"/>
+    
+    <!-- Inner Accent Arc -->
+    <path d="M 24 50 C 36 31, 72 31, 84 50" 
+          fill="none" 
+          stroke="#7dd3fc" 
+          stroke-width="2" 
+          stroke-linecap="round" 
+          opacity="0.8"/>
+
+    <!-- Iris Ring -->
+    <circle cx="54" cy="50" r="19" 
+            fill="none" 
+            stroke="url(#eyeBlueGrad)" 
+            stroke-width="4.5" />
+
+    <!-- Aperture Reflection Arc -->
+    <path d="M 40 42 A 17 17 0 0 1 68 42" 
+          fill="none" 
+          stroke="#ffffff" 
+          stroke-width="3" 
+          stroke-linecap="round" 
+          filter="url(#softGlow)"/>
+
+    <!-- Center Pupil / Lens -->
+    <circle cx="54" cy="50" r="9.5" fill="url(#lensGrad)"/>
+    
+    <!-- Glint -->
+    <circle cx="50.5" cy="46.5" r="3" fill="#ffffff"/>
+  </g>
+
+  <!-- Right Typography: Stylized Italic Wordmark -->
+  <g transform="translate(135, 68)">
+    <text font-family="system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', sans-serif" 
+          font-size="52" 
+          font-weight="800" 
+          font-style="italic" 
+          letter-spacing="-0.5" 
+          fill="url(#textGrad)">
+      Acuity
+    </text>
+  </g>
+</svg>
