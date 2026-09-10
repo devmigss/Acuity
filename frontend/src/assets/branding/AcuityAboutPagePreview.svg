@@ -1,0 +1,139 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 600 450" width="100%" height="100%">
+  <defs>
+    <!-- Background Technical Grid -->
+    <pattern id="dotGrid" x="0" y="0" width="20" height="20" patternUnits="userSpaceOnUse">
+      <circle cx="2" cy="2" r="1" fill="#1e293b" />
+    </pattern>
+
+    <!-- Glass & Agar Gradients -->
+    <radialGradient id="dishBase" cx="50%" cy="45%" r="50%">
+      <stop offset="0%" stop-color="#14213d"/>
+      <stop offset="75%" stop-color="#0b1329"/>
+      <stop offset="100%" stop-color="#030712"/>
+    </radialGradient>
+
+    <radialGradient id="agarSurface" cx="45%" cy="40%" r="48%">
+      <stop offset="0%" stop-color="#1e293b"/>
+      <stop offset="60%" stop-color="#0f172a"/>
+      <stop offset="100%" stop-color="#090d16"/>
+    </radialGradient>
+
+    <!-- Colony Formations -->
+    <radialGradient id="colonyLight" cx="35%" cy="35%" r="60%">
+      <stop offset="0%" stop-color="#fef08a"/>
+      <stop offset="60%" stop-color="#eab308"/>
+      <stop offset="100%" stop-color="#ca8a04"/>
+    </radialGradient>
+
+    <radialGradient id="colonyManual" cx="35%" cy="35%" r="60%">
+      <stop offset="0%" stop-color="#fecdd3"/>
+      <stop offset="70%" stop-color="#f43f5e"/>
+      <stop offset="100%" stop-color="#be123c"/>
+    </radialGradient>
+
+    <!-- Glass Specular Reflection Highlight -->
+    <linearGradient id="glassReflection" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#38bdf8" stop-opacity="0.35"/>
+      <stop offset="30%" stop-color="#38bdf8" stop-opacity="0.05"/>
+      <stop offset="100%" stop-color="transparent"/>
+    </linearGradient>
+
+    <!-- Glow Filter for Active Detections -->
+    <filter id="cyanGlow" x="-20%" y="-20%" width="140%" height="140%">
+      <feGaussianBlur stdDeviation="3" result="blur"/>
+      <feComposite in="SourceGraphic" in2="blur" operator="over"/>
+    </filter>
+  </defs>
+
+  <!-- Canvas Card Base -->
+  <rect width="600" height="450" rx="16" fill="#050811"/>
+  <rect width="600" height="450" rx="16" fill="url(#dotGrid)"/>
+
+  <!-- Telemetry Overlay: Top Left Header -->
+  <g transform="translate(28, 36)">
+    <circle cx="5" cy="5" r="4" fill="#10b981"/>
+    <text x="16" y="8" fill="#94a3b8" font-family="monospace" font-size="11" font-weight="600" letter-spacing="1">ROI: 90mm CALIBRATED</text>
+  </g>
+
+  <!-- Telemetry Overlay: Top Right Live Metrics -->
+  <g transform="translate(450, 36)">
+    <rect x="0" y="-12" width="122" height="28" rx="6" fill="#0f172a" stroke="#1e293b" stroke-width="1"/>
+    <text x="14" y="6" fill="#38bdf8" font-family="system-ui, sans-serif" font-size="11" font-weight="700">CFU COUNT: </text>
+    <text x="92" y="6" fill="#ffffff" font-family="monospace" font-size="12" font-weight="800">28</text>
+  </g>
+
+  <!-- MAIN PETRI DISH (Center: 300, 235) -->
+  <g id="petriDishGroup">
+    <!-- Outer Glass Flange / Shadow -->
+    <circle cx="300" cy="235" r="162" fill="none" stroke="#1e293b" stroke-width="8" opacity="0.6"/>
+    
+    <!-- Outer Glass Dish Rim -->
+    <circle cx="300" cy="235" r="158" fill="url(#dishBase)" stroke="#334155" stroke-width="3"/>
+    
+    <!-- Inner Agar Bed -->
+    <circle cx="300" cy="235" r="148" fill="url(#agarSurface)" stroke="#0284c7" stroke-width="1" stroke-opacity="0.4"/>
+
+    <!-- Region of Interest (ROI) Visual Calibrator Ring (Document Requirement) -->
+    <circle cx="300" cy="235" r="140" fill="none" stroke="#38bdf8" stroke-dasharray="6 6" stroke-width="1.5" opacity="0.45"/>
+
+    <!-- Glass Surface Highlight / Crescent Reflection -->
+    <path d="M 170 170 C 220 110, 370 110, 430 170 C 370 135, 230 135, 170 170 Z" fill="url(#glassReflection)"/>
+
+    <!-- ================= COLONY FORMATIONS & AI BOUNDING BOXES ================= -->
+
+    <!-- Colony 1 (AI Detected) -->
+    <circle cx="250" cy="180" r="14" fill="url(#colonyLight)"/>
+    <circle cx="250" cy="180" r="20" fill="none" stroke="#38bdf8" stroke-dasharray="3 3" stroke-width="1.8" filter="url(#cyanGlow)"/>
+    <!-- Confidence Tag -->
+    <rect x="233" y="146" width="34" height="15" rx="3" fill="#0284c7"/>
+    <text x="238" y="157" fill="#ffffff" font-family="system-ui, sans-serif" font-size="9" font-weight="700">0.96</text>
+
+    <!-- Colony 2 (AI Detected) -->
+    <circle cx="360" cy="195" r="10" fill="url(#colonyLight)"/>
+    <circle cx="360" cy="195" r="16" fill="none" stroke="#38bdf8" stroke-dasharray="3 3" stroke-width="1.8"/>
+    <!-- Confidence Tag -->
+    <rect x="345" y="166" width="30" height="14" rx="3" fill="#0284c7"/>
+    <text x="349" y="177" fill="#ffffff" font-family="system-ui, sans-serif" font-size="9" font-weight="700">0.91</text>
+
+    <!-- Colony 3 (AI Detected - Small) -->
+    <circle cx="225" cy="270" r="8" fill="url(#colonyLight)"/>
+    <circle cx="225" cy="270" r="13" fill="none" stroke="#38bdf8" stroke-dasharray="3 3" stroke-width="1.5"/>
+    <rect x="212" y="244" width="26" height="13" rx="3" fill="#0284c7"/>
+    <text x="215" y="254" fill="#ffffff" font-family="system-ui, sans-serif" font-size="8" font-weight="700">0.88</text>
+
+    <!-- Colony 4 (AI Detected - Dense center) -->
+    <circle cx="320" cy="285" r="13" fill="url(#colonyLight)"/>
+    <circle cx="320" cy="285" r="19" fill="none" stroke="#38bdf8" stroke-dasharray="3 3" stroke-width="1.8"/>
+    <rect x="305" y="253" width="30" height="14" rx="3" fill="#0284c7"/>
+    <text x="309" y="264" fill="#ffffff" font-family="system-ui, sans-serif" font-size="9" font-weight="700">0.94</text>
+
+    <!-- Colony 5 (Human-in-the-Loop Manual Correction Entry) -->
+    <circle cx="280" cy="225" r="11" fill="url(#colonyManual)"/>
+    <!-- Solid Pink/Red Bounding Box for Human Override -->
+    <circle cx="280" cy="225" r="17" fill="none" stroke="#f43f5e" stroke-width="2"/>
+    <!-- Manual Tag Indicator -->
+    <rect x="257" y="194" width="46" height="15" rx="3" fill="#e11d48"/>
+    <text x="261" y="205" fill="#ffffff" font-family="system-ui, sans-serif" font-size="9" font-weight="700">MANUAL</text>
+
+    <!-- Background Tiny Uncounted Colonies -->
+    <circle cx="380" cy="270" r="4.5" fill="#ca8a04" opacity="0.6"/>
+    <circle cx="340" cy="140" r="3.5" fill="#ca8a04" opacity="0.5"/>
+    <circle cx="190" cy="210" r="4" fill="#ca8a04" opacity="0.6"/>
+    <circle cx="260" cy="330" r="5" fill="#ca8a04" opacity="0.5"/>
+    <circle cx="385" cy="225" r="3" fill="#ca8a04" opacity="0.5"/>
+  </g>
+
+  <!-- Bottom Legend Bar -->
+  <g transform="translate(38, 412)">
+    <!-- AI Detection Item -->
+    <circle cx="6" cy="0" r="5" fill="none" stroke="#38bdf8" stroke-dasharray="2 2" stroke-width="1.5"/>
+    <text x="18" y="3" fill="#94a3b8" font-family="system-ui, sans-serif" font-size="11">YOLOv8 Detection</text>
+
+    <!-- Manual Added Item -->
+    <circle cx="156" cy="0" r="5" fill="none" stroke="#f43f5e" stroke-width="2"/>
+    <text x="168" y="3" fill="#94a3b8" font-family="system-ui, sans-serif" font-size="11">Human-in-the-Loop Override</text>
+
+    <!-- Calibrated Threshold Marker -->
+    <text x="440" y="3" fill="#64748b" font-family="monospace" font-size="10">CONF. THRESHOLD: 85%</text>
+  </g>
+</svg>

@@ -33,6 +33,7 @@ export const ROUTES = {
     WORKSPACE: '/student/projects/:projectId/workspace/:plateId',
     WORKSPACE_BASE: '/student/projects/:projectId/workspace',
     ANNOTATION: '/student/projects/:projectId/annotation',
+    ANNOTATION_WORKSPACE: '/student/projects/:projectId/annotate/:plateId',
     EXPORT: '/student/projects/:projectId/export',
   },
 
@@ -40,8 +41,13 @@ export const ROUTES = {
   FACULTY: {
     OVERVIEW: '/faculty/overview',
     REVIEW_QUEUE: '/faculty/review-queue',
+    PROJECT_REVIEW: '/faculty/review/:projectId',
+    CANVAS: '/faculty/review/:projectId/plate/:plateId',
     ADVISEES: '/faculty/advisees',
+    ADVISEE_DETAIL: '/faculty/advisees/:groupId',
     VALIDATED: '/faculty/validated',
+    ARCHIVE: '/faculty/archive',
+    ARCHIVE_RECORD: '/faculty/archive/:projectId',
   },
 
   // ── System Admin ──

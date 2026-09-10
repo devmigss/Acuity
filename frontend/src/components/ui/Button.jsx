@@ -6,15 +6,15 @@
 
 const VARIANTS = {
   primary:
-    'bg-primary-600 text-white hover:bg-primary-700 focus-visible:ring-primary-500 shadow-xs',
+    'bg-primary-600 text-white hover:bg-primary-700 hover:-translate-y-0.5 hover:shadow-lg focus-visible:ring-primary-500 shadow-xs transition-all duration-200',
   accent:
-    'bg-accent-400 text-[#0B1F3A] font-semibold hover:bg-accent-300 focus-visible:ring-accent-400 shadow-xs',
+    'bg-accent-400 text-[#0B1F3A] font-semibold hover:bg-accent-300 hover:-translate-y-0.5 hover:shadow-lg focus-visible:ring-accent-400 shadow-xs transition-all duration-200',
   secondary:
-    'bg-surface-200 text-surface-800 hover:bg-surface-300 focus-visible:ring-surface-400',
+    'bg-surface-200 text-surface-800 hover:bg-surface-300 hover:-translate-y-0.5 hover:shadow-md focus-visible:ring-surface-400 transition-all duration-200',
   danger:
-    'bg-danger-500 text-white hover:bg-danger-600 focus-visible:ring-danger-500',
+    'bg-danger-500 text-white hover:bg-danger-600 hover:-translate-y-0.5 hover:shadow-lg focus-visible:ring-danger-500 transition-all duration-200',
   ghost:
-    'bg-transparent text-surface-600 hover:bg-surface-100 focus-visible:ring-surface-400',
+    'bg-transparent text-surface-600 hover:bg-surface-100 focus-visible:ring-surface-400 transition-all duration-200',
 }
 
 const SIZES = {

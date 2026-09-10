@@ -19,6 +19,7 @@
 import { useState } from 'react'
 import { Link, useNavigate } from 'react-router-dom'
 import { ROUTES } from '@/routes/routeConstants'
+import { validateInstitutionalEmail } from '@/utils/authValidation'
 import Button from '@/components/ui/Button'
 import Input from '@/components/ui/Input'
 
@@ -30,16 +31,6 @@ export default function ForgotPasswordPage() {
   const [resendStatus, setResendStatus] = useState('')
   const [supportNotice, setSupportNotice] = useState(false)
 
-  const validateEmail = (value) => {
-    if (!value.trim()) {
-      return 'Email address is required'
-    }
-    if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(value.trim())) {
-      return 'Please enter a valid email address'
-    }
-    return ''
-  }
-
   const handleChange = (e) => {
     setEmail(e.target.value)
     if (error) setError('')
@@ -48,7 +39,7 @@ export default function ForgotPasswordPage() {
 
   const handleSubmit = async (e) => {
     e.preventDefault()
-    const validationError = validateEmail(email)
+    const validationError = validateInstitutionalEmail(email)
     if (validationError) {
       setError(validationError)
       return
@@ -203,11 +194,11 @@ export default function ForgotPasswordPage() {
             {/* Password Reset Form */}
             <form onSubmit={handleSubmit} noValidate className="w-full mt-6 space-y-4 text-left">
               <Input
-                label="Email Address"
+                label="Institutional Email"
                 id="reset-email"
                 name="email"
                 type="email"
-                placeholder="Enter your email address"
+                placeholder="e.g., name@institution.edu"
                 value={email}
                 onChange={handleChange}
                 error={error}

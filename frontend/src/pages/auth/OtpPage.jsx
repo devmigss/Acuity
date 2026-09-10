@@ -4,27 +4,28 @@
  * REQ: ACUITY_REQUIREMENTS.md Section 7 — Authentication Requirements.
  * Frontend-only prototype designed for future backend-mediated AWS Cognito integration.
  *
- * Design features:
- * - 2-column layout matching the established Login, Register, and Recovery pages.
- * - Left column: "Back to registration" navigation, envelope & lock emblem, "Need help?" card,
- *   and institutional footnote.
- * - Right column:
- *   - Primary card: Shield/Lock icon badge, "OTP Verification" heading, email dispatch notice,
- *     6 individual interactive OTP input boxes with auto-advance, backspace navigation, and paste support,
- *     "Verify & Continue" action button, "Resend OTP" trigger, divider, and "Back to sign in" link.
- *   - Bottom helper banner: Spam folder advisory and adviser support reminder.
- * - Temporary navigation: Clicking "Verify & Continue" with a 6-digit code simulates verification and navigates to `/auth/login`.
+ * Flow:
+ * Registration Form -> OTP Verification -> Account Activation -> Login.
+ *
+ * Capabilities:
+ * - 6 separate interactive OTP inputs with auto-advance, backspace navigation, paste support.
+ * - Validation states: Incomplete code, Invalid code (000000), Success (123456).
+ * - Resend OTP simulation.
+ * - Updates persistent mock account record to `verified: true`.
  */
 
 import { useState, useRef } from 'react'
 import { Link, useNavigate, useLocation } from 'react-router-dom'
 import { ROUTES } from '@/routes/routeConstants'
+import { useAuth } from '@/context/AuthContext'
 import Button from '@/components/ui/Button'
 
 export default function OtpPage() {
   const navigate = useNavigate()
   const location = useLocation()
-  const userEmail = location.state?.email || 'your registered email'
+  const { verifyOtp, resendOtp } = useAuth()
+
+  const userEmail = location.state?.email || 'your registered institutional email'
 
   const [otp, setOtp] = useState(['', '', '', '', '', ''])
   const [error, setError] = useState('')
@@ -36,7 +37,6 @@ export default function OtpPage() {
   const inputRefs = useRef([])
 
   const handleOtpChange = (index, value) => {
-    // Only accept numeric characters
     const numericValue = value.replace(/\D/g, '')
     if (!numericValue && value !== '') return
 
@@ -46,7 +46,7 @@ export default function OtpPage() {
     if (error) setError('')
     if (resendStatus) setResendStatus('')
 
-    // Auto-advance to next input if digit entered
+    // Auto-advance to next input
     if (numericValue && index < 5) {
       inputRefs.current[index + 1]?.focus()
     }
@@ -70,7 +70,6 @@ export default function OtpPage() {
     setOtp(newOtp)
     if (error) setError('')
 
-    // Focus the next empty box or the last box
     const focusIndex = Math.min(pastedData.length, 5)
     inputRefs.current[focusIndex]?.focus()
   }
@@ -80,7 +79,7 @@ export default function OtpPage() {
     const otpCode = otp.join('')
 
     if (otpCode.length < 6) {
-      setError('Please enter the complete 6-digit verification code')
+      setError('Please enter the complete 6-digit verification code.')
       return
     }
 
@@ -88,14 +87,13 @@ export default function OtpPage() {
     setError('')
 
     try {
-      // Simulate client-side OTP validation before temporary prototype navigation
-      await new Promise((resolve) => setTimeout(resolve, 600))
+      await verifyOtp(userEmail, otpCode)
       setIsSuccess(true)
       setTimeout(() => {
         navigate(ROUTES.AUTH.LOGIN)
-      }, 1400)
-    } catch {
-      setError('Invalid or expired verification code. Please try again.')
+      }, 1300)
+    } catch (err) {
+      setError(err?.message || 'Invalid or expired verification code. Please try again.')
     } finally {
       setIsLoading(false)
     }
@@ -104,13 +102,17 @@ export default function OtpPage() {
   const handleResend = async () => {
     setResendStatus('Resending verification code...')
     setError('')
-    await new Promise((resolve) => setTimeout(resolve, 500))
-    setResendStatus('A new 6-digit verification code has been dispatched to your email.')
+    try {
+      await resendOtp(userEmail)
+      setResendStatus('A new 6-digit verification code has been dispatched to your email.')
+    } catch {
+      setError('Unable to resend code right now. Please try again.')
+    }
   }
 
   return (
     <div className="flex-1 w-full flex flex-col lg:grid lg:grid-cols-2">
-      {/* ── Left Column: Support & Navigation (Top-Aligned & Centered) ── */}
+      {/* ── Left Column: Support & Navigation ── */}
       <section
         className="px-8 py-12 sm:px-12 md:px-16 lg:px-16 xl:px-20 lg:py-16 xl:py-20 flex flex-col justify-between items-center lg:border-r border-surface-200 bg-white"
         aria-label="OTP verification assistance"
@@ -136,9 +138,8 @@ export default function OtpPage() {
             </Link>
           </div>
 
-          {/* Center: Need Help Illustration & Support Card */}
+          {/* Center: Illustration & Support Card */}
           <div className="fade-in-up animation-delay-75 flex flex-col items-center text-center my-auto py-12 sm:py-16 max-w-xs mx-auto">
-            {/* Envelope & Lock Icon Illustration */}
             <div className="relative mb-6">
               <div className="w-24 h-24 sm:w-28 sm:h-28 rounded-2xl bg-surface-50 border border-surface-200/80 flex items-center justify-center shadow-2xs">
                 <svg
@@ -155,7 +156,6 @@ export default function OtpPage() {
                 </svg>
               </div>
 
-              {/* Lock Badge in corner */}
               <div className="absolute -bottom-2 -right-2 w-10 h-10 rounded-full bg-primary-500 border-2 border-white flex items-center justify-center shadow-sm text-white">
                 <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="2" aria-hidden="true">
                   <path strokeLinecap="round" strokeLinejoin="round" d="M16.5 10.5V6.75a4.5 4.5 0 1 0-9 0v3.75m-.75 11.25h10.5a2.25 2.25 0 0 0 2.25-2.25v-6.75a2.25 2.25 0 0 0-2.25-2.25H6.75a2.25 2.25 0 0 0-2.25 2.25v6.75a2.25 2.25 0 0 0 2.25 2.25Z" />
@@ -185,20 +185,18 @@ export default function OtpPage() {
             )}
           </div>
 
-          {/* Bottom: Institutional Footnote */}
           <div className="fade-in-up animation-delay-300 mt-12 lg:mt-auto pt-8 text-xs text-surface-400 border-t border-surface-100 lg:border-none text-center lg:text-left">
             University of Santo Tomas · College of Information and Computing Sciences
           </div>
         </div>
       </section>
 
-      {/* ── Right Column: OTP Input Card (Top-Aligned & Centered) ── */}
+      {/* ── Right Column: OTP Input Card ── */}
       <section
         className="px-8 py-12 sm:px-12 md:px-16 lg:px-16 xl:px-20 lg:py-16 xl:py-20 flex flex-col justify-start items-center bg-white"
         aria-labelledby="otp-heading"
       >
         <div className="w-full max-w-[440px] mx-auto flex flex-col gap-6">
-          {/* Main Card */}
           <div className="fade-in-up animation-delay-75 bg-white rounded-2xl border border-surface-200/90 p-8 sm:p-10 shadow-sm text-center flex flex-col items-center">
             {/* Top Badge */}
             <div className="w-14 h-14 rounded-2xl bg-primary-50 border border-primary-100 flex items-center justify-center text-primary-600 shadow-2xs mb-2">
@@ -207,7 +205,6 @@ export default function OtpPage() {
               </svg>
             </div>
 
-            {/* Title */}
             <h1
               id="otp-heading"
               className="text-2xl sm:text-[28px] font-extrabold text-surface-900 tracking-tight leading-tight mt-3"
@@ -215,10 +212,14 @@ export default function OtpPage() {
               OTP Verification
             </h1>
 
-            {/* Subtitle */}
             <p className="mt-2 text-xs sm:text-sm text-surface-500 max-w-sm leading-relaxed">
-              AWS Cognito sent a 6-digit verification code to <span className="font-semibold text-surface-800">{userEmail}</span>.
+              A 6-digit verification code was sent to <span className="font-semibold text-surface-800">{userEmail}</span>.
             </p>
+
+            {/* Demo test helper hint */}
+            <div className="mt-2 text-[11px] text-surface-400">
+              Demo code: <span className="font-mono font-semibold text-surface-600">123456</span> · Use <span className="font-mono text-danger-500">000000</span> to test invalid code
+            </div>
 
             {/* Success Feedback */}
             {isSuccess && (
@@ -244,7 +245,6 @@ export default function OtpPage() {
 
             {/* OTP Form */}
             <form onSubmit={handleSubmit} noValidate className="w-full mt-6 space-y-6">
-              {/* 6 OTP Input Boxes */}
               <div className="flex items-center justify-between gap-2 sm:gap-2.5" onPaste={handlePaste}>
                 {otp.map((digit, idx) => (
                   <input
@@ -263,7 +263,6 @@ export default function OtpPage() {
                 ))}
               </div>
 
-              {/* Submit Button */}
               <div>
                 <Button
                   type="submit"
@@ -277,7 +276,6 @@ export default function OtpPage() {
                 </Button>
               </div>
 
-              {/* Resend Option */}
               <div className="text-xs sm:text-sm text-surface-500">
                 Didn&apos;t get a code?{' '}
                 <button
@@ -289,7 +287,6 @@ export default function OtpPage() {
                 </button>
               </div>
 
-              {/* Divider */}
               <div className="my-4 flex items-center gap-3">
                 <div className="flex-1 border-t border-surface-200" aria-hidden="true" />
                 <span className="text-xs text-surface-400 font-normal">
@@ -298,7 +295,6 @@ export default function OtpPage() {
                 <div className="flex-1 border-t border-surface-200" aria-hidden="true" />
               </div>
 
-              {/* Secondary Navigation */}
               <div className="text-center">
                 <Link
                   to={ROUTES.AUTH.LOGIN}
@@ -310,17 +306,17 @@ export default function OtpPage() {
             </form>
           </div>
 
-          {/* Bottom Synchronization Note */}
+          {/* Bottom Information Note */}
           <div className="fade-in-up animation-delay-225 w-full bg-surface-100 rounded-2xl border border-surface-200/80 p-5 flex items-start gap-3 shadow-2xs text-left">
             <div className="w-5 h-5 rounded-full bg-primary-600 text-white flex items-center justify-center flex-shrink-0 mt-0.5">
               <span className="text-xs font-bold leading-none">i</span>
             </div>
             <div>
               <h3 className="text-xs sm:text-sm font-bold text-surface-900">
-                Cognito & Database Synchronization
+                Institutional Account Activation
               </h3>
               <p className="text-[11px] sm:text-xs text-surface-500 mt-0.5 leading-relaxed">
-                On success, Cognito&apos;s User ID is synced to Acuity&apos;s local PostgreSQL record and the account is ready to log in.
+                Once verified, your institutional account will be activated and ready for sign-in with your institutional email and password.
               </p>
             </div>
           </div>
