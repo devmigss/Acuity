@@ -1,45 +1,50 @@
-# Backend Implementation Plan
+# Backend Implementation Plan (Part 2)
 
-**Goal:** Build a robust API with Node.js/Express and PostgreSQL, supported by a Python AI mock service while the real model is trained.
+**Goal:** Build a robust API with Node.js/Express and PostgreSQL, supported by a Python AI mock service while the real model is trained. This phase prioritizes AWS Cognito authentication first.
 
 ## Open Decisions
 > [!IMPORTANT]
-> 1. **ORM:** Proceed with Prisma?
-> 2. **Language:** TypeScript or plain JavaScript?
-> 3. **Auth:** Use standard JWTs locally before AWS Cognito?
+> 1. **AWS Cognito Setup**: Do you have an AWS account ready to create the Cognito User Pool, or should we script the provisioning via AWS CLI/Terraform?
+> 2. **ORM:** Proceed with Prisma for PostgreSQL?
+> 3. **AI Integration:** For the AI Service (FastAPI), do we want to mock the OpenCV/SOD-YOLOv8 logic entirely for now?
 
 ## Implementation Phases
 
-### 1. Node.js Foundation
+### 1. Authentication & Users (AWS Cognito)
+- **AWS Cognito Integration**: Implement the backend middleware to verify Cognito JWTs (JSON Web Tokens).
+- **User Management**: Endpoints for handling user registration logic, syncing Cognito users with our local PostgreSQL database (Users schema).
+- **Role-Based Access Control (RBAC)**: Enforce Student, Faculty, and Admin permissions on routes using custom Express middleware.
+
+### 2. Node.js Foundation & Database
 - Initialize Node.js/Express with basic security (cors, helmet).
 - Connect to PostgreSQL via ORM.
-- Define core schemas (Users, Tenants, Roles).
+- Define core schemas (Tenants, Users, Roles).
+- Establish multi-tenancy boundaries (Tenant-aware queries).
 - Add `/api/health` endpoint.
 
-### 2. Authentication & Users
-- Build registration and login (`/api/auth/*`).
-- Issue JWTs and protect routes via middleware.
-- Add Role-Based Access Control (Student, Faculty, Admin).
-
 ### 3. Core Project CRUD
-- Define `Project` schema.
-- Build CRUD endpoints for research workspaces.
+- Define `Project` and `ProjectMember` schemas.
+- Build CRUD endpoints for research workspaces, ensuring they are tenant-isolated.
 - Manage project membership and collaborators.
 
-### 4. Image Uploads
-- Add local storage uploads via `multer` (prep for AWS S3).
-- Validate file type/size and link to `Project` schema.
+### 4. Image Uploads & Storage Pipeline
+- Implement direct-to-cloud (Amazon S3) upload capability or temporary local `multer` storage for dev.
+- Validate file type (JPEG/PNG) and size (< 50MB) and link to `Project` schema.
 
-### 5. Python AI Mock Service
+### 5. Python AI Mock Service (FastAPI)
 - Build FastAPI mock returning dummy detection data (CFU counts, bounding boxes) with a 5s delay.
+- Implement queueing (Redis) for asynchronous tasks.
 - Connect Node.js backend to forward images to Python service and save results.
 
 ### 6. Annotations API
-- Endpoints to fetch and save human corrections to AI bounding boxes.
+- Endpoints to fetch and save human corrections to AI bounding boxes (preserving original AI data).
+- Handle morphological measurement syncing.
 
 ### 7. Faculty Review Workflow
 - Endpoints for faculty to review, comment, and approve student projects.
+- Implement Approval workflow (data freezing/locking projects).
+- Data Export: Endpoints to generate and download CSV and PDF reports.
 
 ## Verification
-- **Automated:** Jest/Supertest for API endpoint status codes.
-- **Manual:** Postman health checks and JWT auth flow testing.
+- **Automated:** Jest/Supertest for API endpoint status codes. AI mock tests using pytest.
+- **Manual:** Postman health checks and JWT auth flow testing with real AWS Cognito tokens. Verify role restrictions.
