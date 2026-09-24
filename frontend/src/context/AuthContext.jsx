@@ -14,6 +14,14 @@ export const DEMO_USERS = {
   systemadmin: { email: 'admin@acuity.app' },
 };
 
+const normalizeRole = (roleName) => {
+  if (!roleName) return ROLES.STUDENT;
+  const lower = roleName.toLowerCase();
+  if (lower === 'admin' || lower === 'systemadmin') return ROLES.SYSTEMADMIN;
+  if (lower === 'faculty') return ROLES.FACULTY;
+  return ROLES.STUDENT;
+};
+
 const AuthContext = createContext(null);
 
 
@@ -44,15 +52,48 @@ export function AuthProvider({ children }) {
                 userAttr[attr.getName()] = attr.getValue();
               });
 
-              setUser({
-                id: currentUser.getUsername(),
-                email: userAttr.email,
-                role: ROLES.STUDENT, // Hardcoding to student initially, will be handled via DB or custom attributes later
-                username: currentUser.getUsername(),
-                cognitoSession: session
+              // Call the backend sync endpoint first to ensure user exists and fix any ID mismatch
+              fetch('http://localhost:3000/api/auth/sync', {
+                method: 'POST',
+                headers: {
+                  'Content-Type': 'application/json',
+                  'Authorization': `Bearer ${session.getAccessToken().getJwtToken()}`
+                },
+                body: JSON.stringify({ email: userAttr.email })
+              })
+              .then(() => {
+                // Then fetch the REAL role from the database
+                return fetch('http://localhost:3000/api/auth/me', {
+                  method: 'GET',
+                  headers: {
+                    'Authorization': `Bearer ${session.getAccessToken().getJwtToken()}`
+                  }
+                });
+              })
+              .then(res => res.json())
+              .then(data => {
+                const dbUser = data.user;
+                setUser({
+                  id: currentUser.getUsername(),
+                  email: userAttr.email,
+                  role: normalizeRole(dbUser?.role?.name),
+                  username: currentUser.getUsername(),
+                  cognitoSession: session
+                });
+                setIsLoading(false);
+              })
+              .catch(err => {
+                console.error("Failed to fetch user details from backend database:", err);
+                setUser({
+                  id: currentUser.getUsername(),
+                  email: userAttr.email,
+                  role: ROLES.STUDENT,
+                  username: currentUser.getUsername(),
+                  cognitoSession: session
+                });
+                setIsLoading(false);
               });
             }
-            setIsLoading(false);
           });
         });
       } else {
@@ -137,16 +178,51 @@ export function AuthProvider({ children }) {
               userAttr[attr.getName()] = attr.getValue();
             });
 
-            const sessionUser = {
-              id: cognitoUser.getUsername(),
-              email: userAttr.email,
-              role: ROLES.STUDENT,
-              username: cognitoUser.getUsername(),
-              cognitoSession: result
-            };
-            setUser(sessionUser);
-            setIsLoading(false);
-            resolve(sessionUser);
+            // Call the backend sync endpoint first to ensure they exist
+            fetch('http://localhost:3000/api/auth/sync', {
+              method: 'POST',
+              headers: {
+                'Content-Type': 'application/json',
+                'Authorization': `Bearer ${result.getAccessToken().getJwtToken()}`
+              },
+              body: JSON.stringify({ email: userAttr.email })
+            }).then(() => {
+              // After sync, fetch the real role
+              return fetch('http://localhost:3000/api/auth/me', {
+                method: 'GET',
+                headers: {
+                  'Authorization': `Bearer ${result.getAccessToken().getJwtToken()}`
+                }
+              });
+            })
+            .then(res => res.json())
+            .then(data => {
+              const dbUser = data.user;
+              const sessionUser = {
+                id: cognitoUser.getUsername(),
+                email: userAttr.email,
+                role: normalizeRole(dbUser?.role?.name),
+                username: cognitoUser.getUsername(),
+                cognitoSession: result
+              };
+              setUser(sessionUser);
+              setIsLoading(false);
+              resolve(sessionUser);
+            })
+            .catch(err => {
+              console.error("Failed to sync or fetch user from backend database:", err);
+              // Fallback
+              const sessionUser = {
+                id: cognitoUser.getUsername(),
+                email: userAttr.email,
+                role: ROLES.STUDENT,
+                username: cognitoUser.getUsername(),
+                cognitoSession: result
+              };
+              setUser(sessionUser);
+              setIsLoading(false);
+              resolve(sessionUser);
+            });
           });
         },
         onFailure: (err) => {

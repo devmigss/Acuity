@@ -17,12 +17,32 @@ app.get('/api/health', (req, res) => {
   res.json({ status: 'ok', message: 'Acuity Node API is running' });
 });
 
+// Import Routes
+const authRoutes = require('./routes/auth');
+const projectRoutes = require('./routes/projects');
+
 // Protected Route (Requires AWS Cognito Token)
 app.get('/api/protected', requireAuth, (req, res) => {
   res.json({
     message: 'You have successfully accessed a protected route!',
     user: req.user,
   });
+});
+
+// Mount Routes
+app.use('/api/auth', authRoutes);
+app.use('/api/projects', projectRoutes);
+
+const { prisma } = require('./utils/db');
+
+// Database Test Route
+app.get('/api/db-test', async (req, res) => {
+  try {
+    const tenants = await prisma.tenant.findMany();
+    res.json({ status: 'ok', message: 'Successfully connected to PostgreSQL!', data: tenants });
+  } catch (error) {
+    res.status(500).json({ status: 'error', message: 'Database connection failed', error: error.message });
+  }
 });
 
 app.listen(port, () => {
