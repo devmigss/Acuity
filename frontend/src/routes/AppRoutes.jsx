@@ -28,6 +28,7 @@ import ResetPasswordPage from '@/pages/auth/ResetPasswordPage'
 
 // Shared Authenticated Pages
 import SettingsPage from '@/pages/settings/SettingsPage'
+import ProfilePage from '@/pages/profile/ProfilePage'
 
 // Student Pages
 import StudentDashboardPage from '@/pages/student/DashboardPage'
@@ -108,7 +109,7 @@ export default function AppRoutes() {
         <Route element={<DashboardLayout />}>
           {/* Shared Account Settings */}
           <Route path={ROUTES.SETTINGS} element={<SettingsPage />} />
-          <Route path={ROUTES.PROFILE} element={<Navigate to={ROUTES.SETTINGS} replace />} />
+          <Route path={ROUTES.PROFILE} element={<ProfilePage />} />
 
           {/* ── Student Role Group ── */}
           <Route element={<ProtectedRoute allowedRoles={[ROLES.STUDENT]} />}>

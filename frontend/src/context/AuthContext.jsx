@@ -59,7 +59,11 @@ export function AuthProvider({ children }) {
                   'Content-Type': 'application/json',
                   'Authorization': `Bearer ${session.getAccessToken().getJwtToken()}`
                 },
-                body: JSON.stringify({ email: userAttr.email })
+                body: JSON.stringify({ 
+                  email: userAttr.email,
+                  firstName: userAttr.given_name || '',
+                  lastName: userAttr.family_name || ''
+                })
               })
               .then(() => {
                 // Then fetch the REAL role from the database
@@ -74,7 +78,7 @@ export function AuthProvider({ children }) {
               .then(data => {
                 const dbUser = data.user;
                 setUser({
-                  id: currentUser.getUsername(),
+                  id: dbUser?.id || currentUser.getUsername(),
                   email: userAttr.email,
                   role: normalizeRole(dbUser?.role?.name),
                   username: currentUser.getUsername(),
@@ -113,7 +117,9 @@ export function AuthProvider({ children }) {
     setIsLoading(true);
     return new Promise((resolve, reject) => {
       const attributeList = [
-        new CognitoUserAttribute({ Name: 'email', Value: email })
+        new CognitoUserAttribute({ Name: 'email', Value: email }),
+        new CognitoUserAttribute({ Name: 'given_name', Value: firstName || '' }),
+        new CognitoUserAttribute({ Name: 'family_name', Value: lastName || '' })
       ];
 
       userPool.signUp(email, password, attributeList, null, (err, result) => {
@@ -185,7 +191,11 @@ export function AuthProvider({ children }) {
                 'Content-Type': 'application/json',
                 'Authorization': `Bearer ${result.getAccessToken().getJwtToken()}`
               },
-              body: JSON.stringify({ email: userAttr.email })
+              body: JSON.stringify({ 
+                email: userAttr.email,
+                firstName: userAttr.given_name || '',
+                lastName: userAttr.family_name || ''
+              })
             }).then(() => {
               // After sync, fetch the real role
               return fetch('http://localhost:3000/api/auth/me', {
@@ -199,7 +209,7 @@ export function AuthProvider({ children }) {
             .then(data => {
               const dbUser = data.user;
               const sessionUser = {
-                id: cognitoUser.getUsername(),
+                id: dbUser?.id || cognitoUser.getUsername(),
                 email: userAttr.email,
                 role: normalizeRole(dbUser?.role?.name),
                 username: cognitoUser.getUsername(),
@@ -269,6 +279,48 @@ export function AuthProvider({ children }) {
     alert("Google SSO is not configured in AWS Cognito yet. Please use standard email sign in.");
   }, []);
 
+  const forgotPassword = useCallback(async (email) => {
+    setIsLoading(true);
+    return new Promise((resolve, reject) => {
+      const cognitoUser = new CognitoUser({
+        Username: email,
+        Pool: userPool,
+      });
+
+      cognitoUser.forgotPassword({
+        onSuccess: function (data) {
+          setIsLoading(false);
+          resolve(data);
+        },
+        onFailure: function (err) {
+          setIsLoading(false);
+          reject(err);
+        },
+      });
+    });
+  }, []);
+
+  const confirmPasswordReset = useCallback(async (email, verificationCode, newPassword) => {
+    setIsLoading(true);
+    return new Promise((resolve, reject) => {
+      const cognitoUser = new CognitoUser({
+        Username: email,
+        Pool: userPool,
+      });
+
+      cognitoUser.confirmPassword(verificationCode, newPassword, {
+        onSuccess: function () {
+          setIsLoading(false);
+          resolve();
+        },
+        onFailure: function (err) {
+          setIsLoading(false);
+          reject(err);
+        },
+      });
+    });
+  }, []);
+
   const updateProfile = useCallback(async () => {}, []);
   const changePassword = useCallback(async () => {}, []);
   const deactivateAccount = useCallback(async () => {}, []);
@@ -284,11 +336,13 @@ export function AuthProvider({ children }) {
       resendOtp,
       logout,
       loginWithGoogle,
+      forgotPassword,
+      confirmPasswordReset,
       updateProfile,
       changePassword,
       deactivateAccount
     }),
-    [user, isAuthenticated, isLoading, login, registerUser, verifyOtp, resendOtp, logout, loginWithGoogle, updateProfile, changePassword, deactivateAccount]
+    [user, isAuthenticated, isLoading, login, registerUser, verifyOtp, resendOtp, logout, loginWithGoogle, forgotPassword, confirmPasswordReset, updateProfile, changePassword, deactivateAccount]
   );
 
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;

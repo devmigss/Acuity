@@ -67,18 +67,47 @@ router.post('/sync', requireAuth, async (req, res) => {
       });
     }
 
-    // 4. Create the new user and attach them to the Default Tenant and Student Role
+    let facultyRole = await prisma.role.findUnique({
+      where: { name: 'Faculty' }
+    });
+
+    if (!facultyRole) {
+      facultyRole = await prisma.role.create({
+        data: { name: 'Faculty' }
+      });
+    }
+
+    // Check if the user is in the Faculty Whitelist
+    const whitelisted = await prisma.facultyWhitelist.findUnique({
+      where: { email: (email || '').toLowerCase() }
+    });
+
+    const assignedRoleId = whitelisted ? facultyRole.id : studentRole.id;
+    const assignedTenantId = defaultTenant.id; // Could also dynamically assign tenant based on whitelist later
+
+    // 4. Create the new user and attach them to the Tenant and Role
     user = await prisma.user.create({
       data: {
         cognitoId,
         email: email || `${cognitoId}@placeholder.com`,
         firstName: req.body.firstName || '',
         lastName: req.body.lastName || '',
-        tenantId: defaultTenant.id,
-        roleId: studentRole.id
+        tenantId: assignedTenantId,
+        roleId: assignedRoleId
       },
       include: { tenant: true, role: true }
     });
+
+    // Mark the whitelist entry as Claimed if they were a faculty member
+    if (whitelisted && whitelisted.status !== 'Claimed') {
+      await prisma.facultyWhitelist.update({
+        where: { id: whitelisted.id },
+        data: {
+          status: 'Claimed',
+          claimedAt: new Date()
+        }
+      });
+    }
 
     return res.status(201).json({ message: 'User successfully synced to database', user });
 

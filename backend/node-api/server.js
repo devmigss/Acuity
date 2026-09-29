@@ -20,6 +20,9 @@ app.get('/api/health', (req, res) => {
 // Import Routes
 const authRoutes = require('./routes/auth');
 const projectRoutes = require('./routes/projects');
+const userRoutes = require('./routes/users');
+const uploadRoutes = require('./routes/uploads');
+const adminRoutes = require('./routes/admin');
 
 // Protected Route (Requires AWS Cognito Token)
 app.get('/api/protected', requireAuth, (req, res) => {
@@ -32,6 +35,9 @@ app.get('/api/protected', requireAuth, (req, res) => {
 // Mount Routes
 app.use('/api/auth', authRoutes);
 app.use('/api/projects', projectRoutes);
+app.use('/api/users', userRoutes);
+app.use('/api/uploads', uploadRoutes);
+app.use('/api/admin', adminRoutes);
 
 const { prisma } = require('./utils/db');
 

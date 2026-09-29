@@ -25,8 +25,8 @@ const BASE_URL = import.meta.env.VITE_API_BASE_URL || '/api'
 export async function apiRequest(endpoint, options = {}) {
   const { headers: customHeaders, body, ...rest } = options
 
-  // Token retrieval will be wired in Phase 2 (auth integration)
-  const token = getStoredToken()
+  // Fetch token dynamically from AWS Cognito
+  const token = await getStoredToken()
 
   const headers = {
     'Content-Type': 'application/json',
@@ -70,16 +70,26 @@ export const api = {
   delete: (endpoint, options) => apiRequest(endpoint, { method: 'DELETE', ...options }),
 }
 
+import { userPool } from '../cognito'
+
 /**
- * Retrieve the stored auth token.
- * Placeholder — will be replaced when tokenStorage is wired.
+ * Retrieve the stored auth token dynamically from AWS Cognito.
  */
-function getStoredToken() {
-  try {
-    return sessionStorage.getItem('acuity_token') || null
-  } catch {
-    return null
-  }
+async function getStoredToken() {
+  return new Promise((resolve) => {
+    const currentUser = userPool.getCurrentUser();
+    if (!currentUser) {
+      resolve(null);
+      return;
+    }
+    currentUser.getSession((err, session) => {
+      if (err || !session.isValid()) {
+        resolve(null);
+      } else {
+        resolve(session.getAccessToken().getJwtToken());
+      }
+    });
+  });
 }
 
 /**

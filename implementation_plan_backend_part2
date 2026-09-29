@@ -5,7 +5,7 @@
 ## Open Decisions
 > [!IMPORTANT]
 > 1. **AWS Cognito Setup**: Do you have an AWS account ready to create the Cognito User Pool, or should we script the provisioning via AWS CLI/Terraform?
-> 2. **ORM:** Proceed with Prisma for PostgreSQL?
+> 2. **Database:** PostgreSQL on **Supabase** will be used for production to minimize costs while maintaining compatibility with our Prisma ORM.
 > 3. **AI Integration:** For the AI Service (FastAPI), do we want to mock the OpenCV/SOD-YOLOv8 logic entirely for now?
 
 ## Implementation Phases

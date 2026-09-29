@@ -6,7 +6,7 @@
  * projects, searching/filtering, and navigating to project workspaces.
  */
 
-import { useState, useCallback, useMemo } from 'react'
+import { useState, useCallback, useMemo, useEffect } from 'react'
 import { Link, useNavigate } from 'react-router-dom'
 import { useAuth } from '@/context/AuthContext'
 import { useProjectStore } from '@/stores/useProjectStore'
@@ -27,10 +27,14 @@ function formatDate(isoStr) {
 export default function ProjectsPage() {
   const navigate = useNavigate()
   const { user } = useAuth()
-
   const projects = useProjectStore((s) => s.projects)
   const createProject = useProjectStore((s) => s.createProject)
+  const fetchProjects = useProjectStore((s) => s.fetchProjects)
   const userId = user?.id
+
+  useEffect(() => {
+    fetchProjects();
+  }, [fetchProjects]);
 
   const ownedProjects = useMemo(
     () => projects.filter((p) => p.ownerId === userId),
