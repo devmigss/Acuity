@@ -8,7 +8,7 @@
  *    invitation resending, and revocation workflows.
  */
 
-import { useState, useMemo } from 'react'
+import { useState, useMemo, useEffect } from 'react'
 import { useSearchParams } from 'react-router-dom'
 import PageHeader from '@/components/layout/PageHeader'
 import Card from '@/components/ui/Card'
@@ -33,10 +33,17 @@ export default function UsersTenantsPage() {
 
   const { user: currentAuthUser } = useAuth()
   const users = useAdminStore((s) => s.users)
+  const fetchUsers = useAdminStore((s) => s.fetchUsers)
+  const fetchWhitelist = useAdminStore((s) => s.fetchWhitelist)
   const facultyWhitelist = useAdminStore((s) => s.facultyWhitelist)
   const resendWhitelistInvitation = useAdminStore((s) => s.resendWhitelistInvitation)
   const revokeWhitelistEntry = useAdminStore((s) => s.revokeWhitelistEntry)
   const addToast = useToastStore((s) => s.addToast)
+
+  useEffect(() => {
+    fetchUsers();
+    fetchWhitelist();
+  }, [fetchUsers, fetchWhitelist]);
 
   // ── Modals State ──
   const [isAddUserOpen, setIsAddUserOpen] = useState(false)

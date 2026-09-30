@@ -20,14 +20,15 @@ import { useState } from 'react'
 import { Link, useNavigate } from 'react-router-dom'
 import { ROUTES } from '@/routes/routeConstants'
 import { validateInstitutionalEmail } from '@/utils/authValidation'
+import { useAuth } from '@/context/AuthContext'
 import Button from '@/components/ui/Button'
 import Input from '@/components/ui/Input'
 
 export default function ForgotPasswordPage() {
   const navigate = useNavigate()
+  const { forgotPassword, isLoading } = useAuth()
   const [email, setEmail] = useState('')
   const [error, setError] = useState('')
-  const [isLoading, setIsLoading] = useState(false)
   const [resendStatus, setResendStatus] = useState('')
   const [supportNotice, setSupportNotice] = useState(false)
 
@@ -45,17 +46,13 @@ export default function ForgotPasswordPage() {
       return
     }
 
-    setIsLoading(true)
     setError('')
 
     try {
-      // Simulate client-side validation before temporary frontend prototype navigation
-      await new Promise((resolve) => setTimeout(resolve, 400))
-      navigate(ROUTES.AUTH.RESET_PASSWORD)
-    } catch {
-      setError('An error occurred. Please try again.')
-    } finally {
-      setIsLoading(false)
+      await forgotPassword(email)
+      navigate(ROUTES.AUTH.RESET_PASSWORD, { state: { email } })
+    } catch (err) {
+      setError(err?.message || 'An error occurred. Please try again.')
     }
   }
 

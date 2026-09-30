@@ -499,7 +499,7 @@ const SEED_ACTIVITY = [
 export const useProjectStore = create((set, get) => ({
   // ── State ──
   adviseeGroups: [...SEED_ADVISEE_GROUPS],
-  projects: [...SEED_PROJECTS],
+  projects: [], // Emptied out so we can fetch real data!
   plates: [...SEED_PLATES],
   annotations: { ...SEED_ANNOTATIONS },
   members: [...SEED_MEMBERS],
@@ -510,6 +510,30 @@ export const useProjectStore = create((set, get) => ({
   /* ──────────────────────────────────────────────────────────
      PROJECT CRUD
      ────────────────────────────────────────────────────────── */
+     
+  fetchProjects: async () => {
+    try {
+      const response = await fetch('http://localhost:3000/api/projects', {
+        headers: {
+          'Authorization': `Bearer ${sessionStorage.getItem('acuity_token') || await (async () => {
+             const session = await new Promise(async r => {
+               const cognito = await import('../services/cognito');
+               const user = cognito.userPool.getCurrentUser();
+               if(!user) return r(null);
+               user.getSession((err, s) => r(s));
+             });
+             return session ? session.getAccessToken().getJwtToken() : '';
+          })()}`
+        }
+      });
+      if (response.ok) {
+        const data = await response.json();
+        set({ projects: data.projects || [] });
+      }
+    } catch (e) {
+      console.error("Failed to fetch projects from API", e);
+    }
+  },
 
   createProject: (name, description, user) => {
     const id = genProjectId()

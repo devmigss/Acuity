@@ -1,5 +1,6 @@
 generator client {
   provider = "prisma-client-js"
+  output   = "../../node_modules/@prisma/client"
 }
 
 datasource db {
@@ -7,10 +8,84 @@ datasource db {
   url      = env("DATABASE_URL")
 }
 
-// Basic multi-tenant boilerplate model
-model Project {
+model Tenant {
   id        String   @id @default(uuid())
   name      String
+  users     User[]
+  projects  Project[]
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
+}
+
+model Role {
+  id        String   @id @default(uuid())
+  name      String   @unique
+  users     User[]
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+
+model User {
+  id        String   @id @default(uuid())
+  cognitoId String   @unique
+  email     String   @unique
+  firstName String?
+  lastName  String?
+  avatarUrl String?
+  tenantId  String
+  tenant    Tenant   @relation(fields: [tenantId], references: [id])
+  roleId    String
+  role      Role     @relation(fields: [roleId], references: [id])
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  
+  // Relations
+  projectsOwned Project[]
+  projectMemberships ProjectMember[]
+}
+
+model Project {
+  id          String   @id @default(uuid())
+  name        String
+  description String?
+  status      String   @default("DRAFT") // DRAFT, IN_REVIEW, COMPLETED
+  
+  tenantId    String
+  tenant      Tenant   @relation(fields: [tenantId], references: [id])
+  
+  ownerId     String
+  owner       User     @relation(fields: [ownerId], references: [id])
+  
+  members     ProjectMember[]
+  
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+}
+
+model ProjectMember {
+  id              String   @id @default(uuid())
+  
+  projectId       String
+  project         Project  @relation(fields: [projectId], references: [id], onDelete: Cascade)
+  
+  userId          String
+  user            User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  
+  permissionLevel String   @default("VIEWER") // VIEWER, EDITOR, FACULTY_REVIEWER
+  
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+
+  @@unique([projectId, userId]) // A user can only have one membership per project
+}
+
+model FacultyWhitelist {
+  id            String    @id @default(uuid())
+  email         String    @unique
+  institution   String
+  department    String?
+  status        String    @default("Invitation Sent") // "Invitation Sent", "Claimed"
+  invitedAt     DateTime  @default(now())
+  claimedAt     DateTime?
+  whitelistedBy String    @default("System Administrator")
 }

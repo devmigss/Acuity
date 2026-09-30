@@ -12,8 +12,8 @@
 import { create } from 'zustand'
 import { ROLES } from '@/constants/roles'
 
-const ADMIN_STORAGE_KEY = 'acuity_mock_admin_data'
-const MOCK_ACCOUNTS_KEY = 'acuity_mock_accounts'
+const ADMIN_STORAGE_KEY = 'acuity_mock_admin_data_v2'
+const MOCK_ACCOUNTS_KEY = 'acuity_mock_accounts_v2'
 
 /* ══════════════════════════════════════════════════════════════
    Role Label Mapping
@@ -27,259 +27,22 @@ export const ROLE_LABELS = {
 /* ══════════════════════════════════════════════════════════════
    Seed Platform Users
    ══════════════════════════════════════════════════════════════ */
-const SEED_USERS = [
-  {
-    id: 'u-admin-01',
-    name: 'System Administrator',
-    firstName: 'System',
-    lastName: 'Administrator',
-    email: 'admin@acuity.app',
-    role: ROLES.SYSTEMADMIN,
-    roleLabel: 'System Admin',
-    institution: 'University of Santo Tomas · CICS',
-    status: 'Active',
-    createdAt: '2026-06-01T08:00:00Z',
-    lastActive: '2026-09-01T12:00:00Z',
-  },
-  {
-    id: 'u-faculty-01',
-    name: 'Prof. Cruz',
-    firstName: 'Prof.',
-    lastName: 'Cruz',
-    email: 'faculty@adviser.acuity.app',
-    role: ROLES.FACULTY,
-    roleLabel: 'Faculty Adviser',
-    institution: 'University of Santo Tomas · Department of Biological Sciences',
-    status: 'Active',
-    createdAt: '2026-06-15T09:30:00Z',
-    lastActive: '2026-08-30T14:20:00Z',
-  },
-  {
-    id: 'u-faculty-02',
-    name: 'Dr. Maria Santos',
-    firstName: 'Maria',
-    lastName: 'Santos',
-    email: 'maria.santos@ust.edu.ph',
-    role: ROLES.FACULTY,
-    roleLabel: 'Faculty Adviser',
-    institution: 'University of Santo Tomas · Department of Biological Sciences',
-    status: 'Active',
-    createdAt: '2026-07-01T10:00:00Z',
-    lastActive: '2026-08-28T16:45:00Z',
-  },
-  {
-    id: 'u-student-01',
-    name: 'Alex Rivera',
-    firstName: 'Alex',
-    lastName: 'Rivera',
-    email: 'student@labgroup.acuity.app',
-    role: ROLES.STUDENT,
-    roleLabel: 'Student',
-    institution: 'University of Santo Tomas · Department of Biological Sciences',
-    status: 'Active',
-    createdAt: '2026-07-15T08:00:00Z',
-    lastActive: '2026-08-29T14:30:00Z',
-  },
-  {
-    id: 'u-student-02',
-    name: 'Carlos Tan',
-    firstName: 'Carlos',
-    lastName: 'Tan',
-    email: 'carlos.tan@labgroup.acuity.app',
-    role: ROLES.STUDENT,
-    roleLabel: 'Student',
-    institution: 'University of Santo Tomas · Department of Biological Sciences',
-    status: 'Active',
-    createdAt: '2026-07-16T11:20:00Z',
-    lastActive: '2026-08-28T11:20:00Z',
-  },
-  {
-    id: 'u-student-03',
-    name: 'Maya Reyes',
-    firstName: 'Maya',
-    lastName: 'Reyes',
-    email: 'maya.reyes@labgroup.acuity.app',
-    role: ROLES.STUDENT,
-    roleLabel: 'Student',
-    institution: 'University of Santo Tomas · Department of Biological Sciences',
-    status: 'Active',
-    createdAt: '2026-07-18T14:00:00Z',
-    lastActive: '2026-08-27T16:45:00Z',
-  },
-  {
-    id: 'u-student-04',
-    name: 'Sarah Gomez',
-    firstName: 'Sarah',
-    lastName: 'Gomez',
-    email: 'sarah.gomez@labgroup.acuity.app',
-    role: ROLES.STUDENT,
-    roleLabel: 'Student',
-    institution: 'University of Santo Tomas · Department of Biological Sciences',
-    status: 'Active',
-    createdAt: '2026-06-20T10:00:00Z',
-    lastActive: '2026-08-22T11:00:00Z',
-  },
-  {
-    id: 'u-student-05',
-    name: 'Jamie Chen',
-    firstName: 'Jamie',
-    lastName: 'Chen',
-    email: 'jamie.chen@labgroup.acuity.app',
-    role: ROLES.STUDENT,
-    roleLabel: 'Student',
-    institution: 'De La Salle University · Department of Biology',
-    status: 'Active',
-    createdAt: '2026-07-01T09:00:00Z',
-    lastActive: '2026-08-26T10:00:00Z',
-  },
-  {
-    id: 'u-student-06',
-    name: 'Rafael Aquino',
-    firstName: 'Rafael',
-    lastName: 'Aquino',
-    email: 'rafael.aquino@labgroup.acuity.app',
-    role: ROLES.STUDENT,
-    roleLabel: 'Student',
-    institution: 'University of Santo Tomas · Department of Biological Sciences',
-    status: 'Deactivated',
-    createdAt: '2026-06-25T13:10:00Z',
-    lastActive: '2026-08-21T15:10:00Z',
-  },
-]
+const SEED_USERS = []
 
 /* ══════════════════════════════════════════════════════════════
    Seed Faculty Whitelist
    ══════════════════════════════════════════════════════════════ */
-const SEED_WHITELIST = [
-  {
-    id: 'wl-01',
-    email: 'faculty@adviser.acuity.app',
-    institution: 'University of Santo Tomas',
-    department: 'Department of Biological Sciences · Lab 402',
-    status: 'Claimed', // 'Claimed' | 'Invitation Sent'
-    invitedAt: '2026-06-15T08:00:00Z',
-    claimedAt: '2026-06-15T09:30:00Z',
-    whitelistedBy: 'System Administrator',
-  },
-  {
-    id: 'wl-02',
-    email: 'maria.santos@ust.edu.ph',
-    institution: 'University of Santo Tomas',
-    department: 'Department of Biological Sciences · Room 215',
-    status: 'Claimed',
-    invitedAt: '2026-07-01T08:00:00Z',
-    claimedAt: '2026-07-01T10:00:00Z',
-    whitelistedBy: 'System Administrator',
-  },
-  {
-    id: 'wl-03',
-    email: 'j.reyes@dlsu.edu.ph',
-    institution: 'De La Salle University',
-    department: 'Biology Research Wing · Cell & Tissue Lab',
-    status: 'Invitation Sent',
-    invitedAt: '2026-08-25T14:30:00Z',
-    claimedAt: null,
-    whitelistedBy: 'System Administrator',
-  },
-  {
-    id: 'wl-04',
-    email: 'e.valdez@upm.edu.ph',
-    institution: 'University of the Philippines Manila',
-    department: 'College of Public Health · Microbiology Wing',
-    status: 'Invitation Sent',
-    invitedAt: '2026-08-28T11:15:00Z',
-    claimedAt: null,
-    whitelistedBy: 'System Administrator',
-  },
-]
+const SEED_WHITELIST = []
 
 /* ══════════════════════════════════════════════════════════════
    Seed Admin Activities
    ══════════════════════════════════════════════════════════════ */
-const SEED_ACTIVITIES = [
-  {
-    id: 'act-01',
-    timestamp: '2026-08-28T11:15:00Z',
-    actor: 'System Administrator',
-    action: 'WHITELIST_INVITE',
-    details: 'Pre-approved faculty invitation sent to e.valdez@upm.edu.ph (UP Manila)',
-  },
-  {
-    id: 'act-02',
-    timestamp: '2026-08-25T14:30:00Z',
-    actor: 'System Administrator',
-    action: 'WHITELIST_INVITE',
-    details: 'Pre-approved faculty invitation sent to j.reyes@dlsu.edu.ph (DLSU)',
-  },
-  {
-    id: 'act-03',
-    timestamp: '2026-08-21T15:15:00Z',
-    actor: 'System Administrator',
-    action: 'USER_DEACTIVATE',
-    details: 'Deactivated account for Rafael Aquino (rafael.aquino@labgroup.acuity.app)',
-  },
-  {
-    id: 'act-04',
-    timestamp: '2026-07-15T08:00:00Z',
-    actor: 'System Administrator',
-    action: 'USER_PROVISION',
-    details: 'Provisioned student account for Alex Rivera (student@labgroup.acuity.app)',
-  },
-]
+const SEED_ACTIVITIES = []
 
 /* ══════════════════════════════════════════════════════════════
    Seed System Announcements
    ══════════════════════════════════════════════════════════════ */
-export const SEED_ANNOUNCEMENTS = [
-  {
-    id: 'ann-01',
-    title: 'Scheduled Server Optimization',
-    alertType: 'Maintenance',
-    message: 'Backend AI inference queue updates scheduled for Saturday, 02:00 AM UTC. Direct-to-S3 uploads will remain unaffected.',
-    startDate: '2026-08-30',
-    expirationDate: '2026-09-05',
-    audience: 'All Users',
-    status: 'Active',
-    createdAt: '2026-08-30T08:00:00Z',
-    updatedAt: '2026-08-30T08:00:00Z',
-  },
-  {
-    id: 'ann-02',
-    title: 'New Spatial Calibration Model Released',
-    alertType: 'Info',
-    message: 'SOD-YOLOv8 v2.1 is now active across all institutions with improved circular ROI detection on 90mm dishes.',
-    startDate: '2026-09-01',
-    expirationDate: '2026-09-15',
-    audience: 'Faculty Only',
-    status: 'Active',
-    createdAt: '2026-09-01T09:00:00Z',
-    updatedAt: '2026-09-01T09:00:00Z',
-  },
-  {
-    id: 'ann-03',
-    title: 'Upcoming Database Migration Window',
-    alertType: 'System Alert',
-    message: 'PostgreSQL RDS maintenance window scheduled for Sunday from 01:00 AM to 03:00 AM UTC. Canvas saves may experience brief delays.',
-    startDate: '2026-09-12',
-    expirationDate: '2026-09-13',
-    audience: 'Students Only',
-    status: 'Scheduled',
-    createdAt: '2026-09-02T10:30:00Z',
-    updatedAt: '2026-09-02T10:30:00Z',
-  },
-  {
-    id: 'ann-04',
-    title: 'Semester Break Archive Notice',
-    alertType: 'Info',
-    message: 'Archived project freeze period completed for Academic Term 2025-2026.',
-    startDate: '2026-06-01',
-    expirationDate: '2026-06-30',
-    audience: 'All Users',
-    status: 'Archived',
-    createdAt: '2026-06-01T08:00:00Z',
-    updatedAt: '2026-06-30T23:59:59Z',
-  },
-]
+export const SEED_ANNOUNCEMENTS = []
 
 /* ══════════════════════════════════════════════════════════════
    Seed Public Page Content (Figure 3.41)
@@ -480,6 +243,54 @@ export const useAdminStore = create((set, get) => ({
   documents: initialData.documents,
 
   /* ── Getters ── */
+  fetchUsers: async () => {
+    try {
+      const response = await fetch('http://localhost:3000/api/users', {
+        headers: {
+          'Authorization': `Bearer ${sessionStorage.getItem('acuity_token') || await (async () => {
+             const session = await new Promise(async r => {
+               const cognito = await import('../services/cognito');
+               const user = cognito.userPool.getCurrentUser();
+               if(!user) return r(null);
+               user.getSession((err, s) => r(s));
+             });
+             return session ? session.getAccessToken().getJwtToken() : '';
+          })()}`
+        }
+      });
+      if (response.ok) {
+        const data = await response.json();
+        set({ users: data.users || [], platformUsers: data.users || [] });
+      }
+    } catch (e) {
+      console.error("Failed to fetch users from API", e);
+    }
+  },
+
+  fetchWhitelist: async () => {
+    try {
+      const response = await fetch('http://localhost:3000/api/admin/whitelist', {
+        headers: {
+          'Authorization': `Bearer ${sessionStorage.getItem('acuity_token') || await (async () => {
+             const session = await new Promise(async r => {
+               const cognito = await import('../services/cognito');
+               const user = cognito.userPool.getCurrentUser();
+               if(!user) return r(null);
+               user.getSession((err, s) => r(s));
+             });
+             return session ? session.getAccessToken().getJwtToken() : '';
+          })()}`
+        }
+      });
+      if (response.ok) {
+        const data = await response.json();
+        set({ facultyWhitelist: data.whitelist || [] });
+      }
+    } catch (e) {
+      console.error("Failed to fetch whitelist from API", e);
+    }
+  },
+
   getUser: (id) => get().users.find((u) => u.id === id) || null,
 
   getUserByEmail: (email) => {
@@ -670,55 +481,43 @@ export const useAdminStore = create((set, get) => ({
   },
 
   /* ── Faculty Whitelist Actions ── */
-  addFacultyWhitelist: ({ email, institution, department, invitedBy = 'System Administrator' }) => {
+  addFacultyWhitelist: async ({ email, institution, department, invitedBy = 'System Administrator' }) => {
     const trimmedEmail = (email || '').trim().toLowerCase()
 
     if (!trimmedEmail) {
       throw new Error('Faculty email is required.')
     }
 
-    // Check duplicate
-    if (get().isEmailWhitelisted(trimmedEmail)) {
-      throw new Error('Email already whitelisted.')
+    try {
+      const response = await fetch('http://localhost:3000/api/admin/whitelist', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${sessionStorage.getItem('acuity_token') || await (async () => {
+             const session = await new Promise(async r => {
+               const cognito = await import('../services/cognito');
+               const user = cognito.userPool.getCurrentUser();
+               if(!user) return r(null);
+               user.getSession((err, s) => r(s));
+             });
+             return session ? session.getAccessToken().getJwtToken() : '';
+          })()}`
+        },
+        body: JSON.stringify({ email: trimmedEmail, institution, department })
+      });
+
+      const data = await response.json();
+      
+      if (!response.ok) {
+        throw new Error(data.error || 'Failed to add to whitelist');
+      }
+
+      await get().fetchWhitelist();
+      return data.entry;
+    } catch (err) {
+      console.error("Add whitelist error:", err);
+      throw err;
     }
-
-    // Check if user already exists as registered faculty
-    const existingUser = get().getUserByEmail(trimmedEmail)
-    const isAlreadyRegistered = Boolean(existingUser && existingUser.role === ROLES.FACULTY)
-
-    const newEntry = {
-      id: `wl-${Date.now()}-${_wlCounter++}`,
-      email: trimmedEmail,
-      institution: (institution || 'University of Santo Tomas').trim(),
-      department: (department || 'Department of Biological Sciences').trim(),
-      status: isAlreadyRegistered ? 'Claimed' : 'Invitation Sent',
-      invitedAt: new Date().toISOString(),
-      claimedAt: isAlreadyRegistered ? new Date().toISOString() : null,
-      whitelistedBy: invitedBy,
-    }
-
-    const updatedWhitelist = [newEntry, ...get().facultyWhitelist]
-
-    const newActivity = {
-      id: `act-${Date.now()}-${_actCounter++}`,
-      timestamp: new Date().toISOString(),
-      actor: invitedBy,
-      action: 'WHITELIST_INVITE',
-      details: `Pre-approved faculty invitation sent to ${trimmedEmail} (${newEntry.institution})`,
-    }
-
-    set({
-      facultyWhitelist: updatedWhitelist,
-      adminActivities: [newActivity, ...get().adminActivities],
-    })
-
-    saveAdminData({
-      users: get().users,
-      facultyWhitelist: updatedWhitelist,
-      adminActivities: [newActivity, ...get().adminActivities],
-    })
-
-    return newEntry
   },
 
   updateWhitelistEntry: (id, updates) => {
@@ -768,32 +567,30 @@ export const useAdminStore = create((set, get) => ({
     return true
   },
 
-  revokeWhitelistEntry: (id) => {
-    const entry = get().facultyWhitelist.find((w) => w.id === id)
-    if (!entry) return false
-
-    const updatedList = get().facultyWhitelist.filter((w) => w.id !== id)
-
-    const newActivity = {
-      id: `act-${Date.now()}-${_actCounter++}`,
-      timestamp: new Date().toISOString(),
-      actor: 'System Administrator',
-      action: 'WHITELIST_REVOKE',
-      details: `Revoked faculty authorization for ${entry.email}`,
+  revokeWhitelistEntry: async (id) => {
+    try {
+      const response = await fetch(`http://localhost:3000/api/admin/whitelist/${id}`, {
+        method: 'DELETE',
+        headers: {
+          'Authorization': `Bearer ${sessionStorage.getItem('acuity_token') || await (async () => {
+             const session = await new Promise(async r => {
+               const cognito = await import('../services/cognito');
+               const user = cognito.userPool.getCurrentUser();
+               if(!user) return r(null);
+               user.getSession((err, s) => r(s));
+             });
+             return session ? session.getAccessToken().getJwtToken() : '';
+          })()}`
+        }
+      });
+      if (response.ok) {
+        await get().fetchWhitelist();
+        return true;
+      }
+    } catch (e) {
+      console.error(e);
     }
-
-    set({
-      facultyWhitelist: updatedList,
-      adminActivities: [newActivity, ...get().adminActivities],
-    })
-
-    saveAdminData({
-      users: get().users,
-      facultyWhitelist: updatedList,
-      adminActivities: [newActivity, ...get().adminActivities],
-    })
-
-    return true
+    return false;
   },
 
   /* ══════════════════════════════════════════════════════════════

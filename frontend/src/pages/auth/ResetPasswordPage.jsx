@@ -17,16 +17,23 @@
  */
 
 import { useState } from 'react'
-import { Link, useNavigate } from 'react-router-dom'
+import { Link, useNavigate, useLocation, Navigate } from 'react-router-dom'
 import { ROUTES } from '@/routes/routeConstants'
 import { validatePassword, validateConfirmPassword } from '@/utils/authValidation'
+import { useAuth } from '@/context/AuthContext'
 import Button from '@/components/ui/Button'
 import Input from '@/components/ui/Input'
 
 export default function ResetPasswordPage() {
   const navigate = useNavigate()
+  const location = useLocation()
+  const { confirmPasswordReset, isLoading } = useAuth()
+  
+  // Get email from navigation state. If missing, they probably bypassed the Forgot Password page.
+  const email = location.state?.email
 
   const [formData, setFormData] = useState({
+    verificationCode: '',
     newPassword: '',
     confirmPassword: '',
   })
@@ -34,9 +41,13 @@ export default function ResetPasswordPage() {
   const [showNewPassword, setShowNewPassword] = useState(false)
   const [showConfirmPassword, setShowConfirmPassword] = useState(false)
   const [errors, setErrors] = useState({})
-  const [isLoading, setIsLoading] = useState(false)
   const [isSuccess, setIsSuccess] = useState(false)
   const [supportNotice, setSupportNotice] = useState(false)
+
+  // Redirect to Forgot Password if there is no email in state
+  if (!email) {
+    return <Navigate to={ROUTES.AUTH.FORGOT_PASSWORD} replace />
+  }
 
   // Password criteria verification
   const hasMinLength = formData.newPassword.length >= 8
@@ -61,6 +72,10 @@ export default function ResetPasswordPage() {
 
   const validateForm = () => {
     const newErrors = {}
+
+    if (!formData.verificationCode.trim()) {
+      newErrors.verificationCode = 'Verification code is required'
+    }
 
     const passwordError = validatePassword(formData.newPassword)
     if (passwordError) {
@@ -88,20 +103,16 @@ export default function ResetPasswordPage() {
     e.preventDefault()
     if (!validateForm()) return
 
-    setIsLoading(true)
     setErrors({})
 
     try {
-      // Simulate client-side password reset execution (ready for Cognito integration)
-      await new Promise((resolve) => setTimeout(resolve, 600))
+      await confirmPasswordReset(email, formData.verificationCode.trim(), formData.newPassword)
       setIsSuccess(true)
       setTimeout(() => {
         navigate(ROUTES.AUTH.LOGIN)
       }, 1500)
-    } catch {
-      setErrors({ form: 'Failed to reset password. Please try again.' })
-    } finally {
-      setIsLoading(false)
+    } catch (err) {
+      setErrors({ form: err?.message || 'Failed to reset password. Please try again.' })
     }
   }
 
@@ -295,6 +306,26 @@ export default function ResetPasswordPage() {
 
             {/* Form */}
             <form onSubmit={handleSubmit} noValidate className="w-full mt-6 space-y-4 text-left">
+              {/* Verification Code */}
+              <div>
+                <Input
+                  label="Verification Code"
+                  id="verification-code"
+                  name="verificationCode"
+                  type="text"
+                  placeholder="Enter the 6-digit code from your email"
+                  value={formData.verificationCode}
+                  onChange={handleChange}
+                  error={errors.verificationCode}
+                  required
+                  icon={
+                    <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="1.75" aria-hidden="true">
+                      <path strokeLinecap="round" strokeLinejoin="round" d="M15.75 5.25a3 3 0 0 1 3 3m3 0a6 6 0 0 1-7.029 5.912c-.563-.097-1.159.026-1.563.43L10.5 17.25H8.25v2.25H6v2.25H2.25v-2.818c0-.597.237-1.17.659-1.591l6.499-6.499c.404-.404.527-1 .43-1.563A6 6 0 1 1 21.75 8.25z" />
+                    </svg>
+                  }
+                />
+              </div>
+
               {/* New Password */}
               <div>
                 <Input

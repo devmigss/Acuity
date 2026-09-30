@@ -1,471 +1,329 @@
 /**
- * Acuity — Authentication Context & Mock Authentication Service
- *
+ * Acuity — AWS Cognito Authentication Context
  * REQ: ACUITY_REQUIREMENTS.md Section 7 — Authentication Requirements.
- *
- * Architecture:
- * - Provides clean mock authentication state and lifecycle for Phase 1.
- * - Simulates native login, registration, OTP account activation, and Google SSO authorization check.
- * - Stores mock accounts in localStorage (`acuity_mock_accounts`) alongside active session.
- * - Real AWS Cognito and PostgreSQL integration will replace this mock layer in later phases.
  */
 
-import { createContext, useCallback, useContext, useMemo, useState, useEffect } from 'react'
-import { ROLES } from '@/constants/roles'
-import { isPersonalEmail } from '@/utils/authValidation'
+import { createContext, useCallback, useContext, useMemo, useState, useEffect } from 'react';
+import { AuthenticationDetails, CognitoUser, CognitoUserAttribute } from 'amazon-cognito-identity-js';
+import { userPool } from '../services/cognito';
+import { ROLES } from '@/constants/roles';
 
-const AuthContext = createContext(null)
-
-const SESSION_STORAGE_KEY = 'acuity_demo_session'
-const MOCK_ACCOUNTS_KEY = 'acuity_mock_accounts'
-
-/**
- * Baseline Demo Accounts for Frontend Testing
- */
 export const DEMO_USERS = {
-  student: {
-    id: 'demo-student-01',
-    username: 'student',
-    firstName: 'Alex',
-    lastName: 'Rivera',
-    displayName: 'Alex Rivera',
-    email: 'student@labgroup.acuity.app',
-    biography: 'Undergraduate thesis researcher focusing on automated CFU quantification and morphological analysis in bacterial cultures.',
-    role: ROLES.STUDENT,
-    title: 'Student',
-    tenant: 'UST - Department of Biological Sciences',
-    group: 'Group 8 — Microbiology Cohort',
-    authProvider: 'native',
-    verified: true,
-    avatar: 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=150&auto=format&fit=crop&q=80',
-  },
-  faculty: {
-    id: 'demo-faculty-01',
-    username: 'faculty',
-    firstName: 'Prof.',
-    lastName: 'Cruz',
-    displayName: 'Prof. Cruz',
-    email: 'faculty@adviser.acuity.app',
-    biography: 'Associate Professor of Microbiology advising student research cohorts on macroscopic colony verification.',
-    role: ROLES.FACULTY,
-    title: 'Faculty Adviser',
-    tenant: 'UST - Department of Biological Sciences',
-    group: 'Microbiology & Applied Biotechnology',
-    authProvider: 'native',
-    verified: true,
-    avatar: 'https://images.unsplash.com/photo-1573496359142-b8d87734a5a2?w=150&auto=format&fit=crop&q=80',
-  },
-  systemadmin: {
-    id: 'demo-admin-01',
-    username: 'systemadmin',
-    firstName: 'System',
-    lastName: 'Administrator',
-    displayName: 'System Administrator',
-    email: 'admin@acuity.app',
-    biography: 'Platform administrator for Acuity multi-tenant operations, user management, and audit log monitoring.',
-    role: ROLES.SYSTEMADMIN,
-    title: 'System Admin',
-    tenant: 'University of Santo Tomas · CICS',
-    group: 'Platform Administration',
-    authProvider: 'native',
-    verified: true,
-    avatar: 'https://images.unsplash.com/photo-1560250097-0b93528c311a?w=150&auto=format&fit=crop&q=80',
-  },
-}
+  student: { email: 'student@labgroup.acuity.app' },
+  faculty: { email: 'faculty@adviser.acuity.app' },
+  systemadmin: { email: 'admin@acuity.app' },
+};
 
-/**
- * Loads mock accounts list from storage or initializes with defaults.
- */
-function getStoredAccounts() {
-  try {
-    const data = localStorage.getItem(MOCK_ACCOUNTS_KEY)
-    if (data) return JSON.parse(data)
-  } catch {
-    // Ignore storage parse error
-  }
-  // Initialize with the demo users
-  const initial = [
-    { ...DEMO_USERS.student, password: 'student' },
-    { ...DEMO_USERS.faculty, password: 'faculty' },
-    { ...DEMO_USERS.systemadmin, password: 'systemadmin' },
-  ]
-  try {
-    localStorage.setItem(MOCK_ACCOUNTS_KEY, JSON.stringify(initial))
-  } catch {
-    // Ignore storage write error
-  }
-  return initial
-}
+const normalizeRole = (roleName) => {
+  if (!roleName) return ROLES.STUDENT;
+  const lower = roleName.toLowerCase();
+  if (lower === 'admin' || lower === 'systemadmin') return ROLES.SYSTEMADMIN;
+  if (lower === 'faculty') return ROLES.FACULTY;
+  return ROLES.STUDENT;
+};
 
-function saveStoredAccounts(accounts) {
-  try {
-    localStorage.setItem(MOCK_ACCOUNTS_KEY, JSON.stringify(accounts))
-  } catch {
-    // Ignore storage error
-  }
-}
+const AuthContext = createContext(null);
+
 
 export function AuthProvider({ children }) {
-  const [user, setUser] = useState(() => {
-    try {
-      const saved = localStorage.getItem(SESSION_STORAGE_KEY)
-      return saved ? JSON.parse(saved) : null
-    } catch {
-      return null
-    }
-  })
+  const [user, setUser] = useState(null);
+  const [isLoading, setIsLoading] = useState(true);
 
-  const [isLoading, setIsLoading] = useState(false)
-
-  // Ensure mock accounts exist on mount
+  // Check for an active session on mount
   useEffect(() => {
-    getStoredAccounts()
-  }, [])
+    const checkSession = async () => {
+      const currentUser = userPool.getCurrentUser();
+      if (currentUser) {
+        currentUser.getSession((err, session) => {
+          if (err || !session.isValid()) {
+            setUser(null);
+            setIsLoading(false);
+            return;
+          }
+          
+          // Get user attributes
+          currentUser.getUserAttributes((err, attributes) => {
+            if (err) {
+              setUser(null);
+            } else {
+              // Convert attributes array to a simple object
+              const userAttr = {};
+              attributes.forEach((attr) => {
+                userAttr[attr.getName()] = attr.getValue();
+              });
 
-  const isAuthenticated = Boolean(user)
+              // Call the backend sync endpoint first to ensure user exists and fix any ID mismatch
+              fetch('http://localhost:3000/api/auth/sync', {
+                method: 'POST',
+                headers: {
+                  'Content-Type': 'application/json',
+                  'Authorization': `Bearer ${session.getAccessToken().getJwtToken()}`
+                },
+                body: JSON.stringify({ 
+                  email: userAttr.email,
+                  firstName: userAttr.given_name || '',
+                  lastName: userAttr.family_name || ''
+                })
+              })
+              .then(() => {
+                // Then fetch the REAL role from the database
+                return fetch('http://localhost:3000/api/auth/me', {
+                  method: 'GET',
+                  headers: {
+                    'Authorization': `Bearer ${session.getAccessToken().getJwtToken()}`
+                  }
+                });
+              })
+              .then(res => res.json())
+              .then(data => {
+                const dbUser = data.user;
+                setUser({
+                  id: dbUser?.id || currentUser.getUsername(),
+                  email: userAttr.email,
+                  role: normalizeRole(dbUser?.role?.name),
+                  username: currentUser.getUsername(),
+                  cognitoSession: session
+                });
+                setIsLoading(false);
+              })
+              .catch(err => {
+                console.error("Failed to fetch user details from backend database:", err);
+                setUser({
+                  id: currentUser.getUsername(),
+                  email: userAttr.email,
+                  role: ROLES.STUDENT,
+                  username: currentUser.getUsername(),
+                  cognitoSession: session
+                });
+                setIsLoading(false);
+              });
+            }
+          });
+        });
+      } else {
+        setIsLoading(false);
+      }
+    };
+
+    checkSession();
+  }, []);
+
+  const isAuthenticated = Boolean(user);
 
   /**
-   * Register a new student/researcher account.
-   * New accounts start in `verified: false` until 6-digit OTP verification is completed.
+   * Register a new user in AWS Cognito
    */
-  const registerUser = useCallback(async ({ firstName, lastName, fullName, email, password }) => {
-    setIsLoading(true)
-    try {
-      await new Promise((resolve) => setTimeout(resolve, 350))
+  const registerUser = useCallback(async ({ firstName, lastName, email, password }) => {
+    setIsLoading(true);
+    return new Promise((resolve, reject) => {
+      const attributeList = [
+        new CognitoUserAttribute({ Name: 'email', Value: email }),
+        new CognitoUserAttribute({ Name: 'given_name', Value: firstName || '' }),
+        new CognitoUserAttribute({ Name: 'family_name', Value: lastName || '' })
+      ];
 
-      const trimmedEmail = (email || '').trim().toLowerCase()
-      const accounts = getStoredAccounts()
-
-      const existing = accounts.find((acc) => acc.email.toLowerCase() === trimmedEmail)
-      if (existing) {
-        throw new Error('An account with this email already exists.')
-      }
-
-      const constructedDisplayName = (fullName || `${firstName || ''} ${lastName || ''}`).trim()
-
-      const newAccount = {
-        id: `user-${Date.now()}`,
-        username: trimmedEmail.split('@')[0],
-        displayName: constructedDisplayName,
-        firstName: firstName ? firstName.trim() : constructedDisplayName.split(' ')[0] || '',
-        lastName: lastName ? lastName.trim() : constructedDisplayName.split(' ').slice(1).join(' ') || '',
-        email: trimmedEmail,
-        password,
-        role: ROLES.STUDENT,
-        title: 'Student',
-        tenant: 'University Laboratory Workspace',
-        group: 'Microbiology Research Group',
-        authProvider: 'native',
-        verified: false,
-        createdAt: new Date().toISOString(),
-      }
-
-      accounts.push(newAccount)
-      saveStoredAccounts(accounts)
-      return newAccount
-    } finally {
-      setIsLoading(false)
-    }
-  }, [])
+      userPool.signUp(email, password, attributeList, null, (err, result) => {
+        setIsLoading(false);
+        if (err) {
+          reject(err);
+          return;
+        }
+        resolve(result.user);
+      });
+    });
+  }, []);
 
   /**
-   * Verify an account using a 6-digit OTP code.
-   * Mock rules:
-   * - Incomplete (<6 digits) -> rejected
-   * - Code '000000' -> simulated invalid/expired code
-   * - Any other 6-digit numeric string (standard demo '123456') -> verified
+   * Verify an account using a 6-digit OTP code sent to email
    */
   const verifyOtp = useCallback(async (email, code) => {
-    setIsLoading(true)
-    try {
-      await new Promise((resolve) => setTimeout(resolve, 450))
+    setIsLoading(true);
+    return new Promise((resolve, reject) => {
+      const cognitoUser = new CognitoUser({
+        Username: email,
+        Pool: userPool,
+      });
 
-      if (!code || code.length !== 6) {
-        throw new Error('Please enter the complete 6-digit verification code.')
-      }
-
-      if (code === '000000') {
-        throw new Error('Invalid or expired verification code. Please try again.')
-      }
-
-      const trimmedEmail = (email || '').trim().toLowerCase()
-      const accounts = getStoredAccounts()
-      const target = accounts.find((acc) => acc.email.toLowerCase() === trimmedEmail)
-
-      if (target) {
-        target.verified = true
-        saveStoredAccounts(accounts)
-      }
-
-      return true
-    } finally {
-      setIsLoading(false)
-    }
-  }, [])
+      cognitoUser.confirmRegistration(code, true, (err, result) => {
+        setIsLoading(false);
+        if (err) {
+          reject(err);
+          return;
+        }
+        resolve(result);
+      });
+    });
+  }, []);
 
   /**
-   * Resend OTP simulation.
-   */
-  const resendOtp = useCallback(async () => {
-    setIsLoading(true)
-    try {
-      await new Promise((resolve) => setTimeout(resolve, 300))
-      return true
-    } finally {
-      setIsLoading(false)
-    }
-  }, [])
-
-  /**
-   * Native Sign In with Email and Password.
+   * Native Sign In with Email and Password
    */
   const login = useCallback(async (credentials) => {
-    setIsLoading(true)
-    try {
-      await new Promise((resolve) => setTimeout(resolve, 350))
+    setIsLoading(true);
+    return new Promise((resolve, reject) => {
+      const authenticationDetails = new AuthenticationDetails({
+        Username: credentials.email || credentials.username,
+        Password: credentials.password,
+      });
 
-      if (!credentials) {
-        throw new Error('Invalid email or password')
-      }
+      const cognitoUser = new CognitoUser({
+        Username: credentials.email || credentials.username,
+        Pool: userPool,
+      });
 
-      const ident = (credentials.email || credentials.username || '').trim().toLowerCase()
-      const pass = (credentials.password || '').trim()
+      cognitoUser.authenticateUser(authenticationDetails, {
+        onSuccess: (result) => {
+          cognitoUser.getUserAttributes((err, attributes) => {
+            if (err) {
+              setIsLoading(false);
+              reject(err);
+              return;
+            }
+            const userAttr = {};
+            attributes.forEach((attr) => {
+              userAttr[attr.getName()] = attr.getValue();
+            });
 
-      if (!ident || !pass) {
-        throw new Error('Invalid email or password')
-      }
-
-      // Check registered accounts list
-      const accounts = getStoredAccounts()
-      const matched = accounts.find(
-        (acc) => acc.email?.toLowerCase() === ident || acc.username?.toLowerCase() === ident
-      )
-
-      if (matched?.deactivated) {
-        throw new Error('This account has been deactivated. Please contact your system administrator.')
-      }
-
-      // Check shortcuts for demo credentials
-      if ((ident === 'student' || ident === 'student@labgroup.acuity.app') && pass === 'student') {
-        const studentObj = { ...DEMO_USERS.student, ...(matched || {}) }
-        delete studentObj.password
-        setUser(studentObj)
-        localStorage.setItem(SESSION_STORAGE_KEY, JSON.stringify(studentObj))
-        return studentObj
-      }
-      if ((ident === 'faculty' || ident === 'faculty@adviser.acuity.app') && pass === 'faculty') {
-        const facultyObj = { ...DEMO_USERS.faculty, ...(matched || {}) }
-        delete facultyObj.password
-        setUser(facultyObj)
-        localStorage.setItem(SESSION_STORAGE_KEY, JSON.stringify(facultyObj))
-        return facultyObj
-      }
-      if (
-        (ident === 'systemadmin' || ident === 'admin' || ident === 'admin@acuity.app') &&
-        (pass === 'systemadmin' || pass === 'admin')
-      ) {
-        const adminObj = { ...DEMO_USERS.systemadmin, ...(matched || {}) }
-        delete adminObj.password
-        setUser(adminObj)
-        localStorage.setItem(SESSION_STORAGE_KEY, JSON.stringify(adminObj))
-        return adminObj
-      }
-
-      if (!matched || matched.password !== pass) {
-        throw new Error('Invalid email or password')
-      }
-
-      if (!matched.verified) {
-        throw new Error('Please verify your account before logging in. A verification code was sent to your email.')
-      }
-
-      // Session user object (omit password)
-      const sessionUser = { ...matched }
-      delete sessionUser.password
-
-      setUser(sessionUser)
-      localStorage.setItem(SESSION_STORAGE_KEY, JSON.stringify(sessionUser))
-      return sessionUser
-    } finally {
-      setIsLoading(false)
-    }
-  }, [])
-
-  /**
-   * Google SSO Simulation with Authorization Gate.
-   *
-   * Security principle:
-   * Having a Google/Gmail identity does NOT grant Acuity access.
-   * The user must match an authorized institutional user account.
-   */
-  const loginWithGoogle = useCallback(async (googleEmail) => {
-    setIsLoading(true)
-    try {
-      await new Promise((resolve) => setTimeout(resolve, 500))
-
-      const email = (googleEmail || '').trim().toLowerCase()
-
-      if (!email) {
-        throw new Error('Please provide your institutional Google account.')
-      }
-
-      // Personal Gmail accounts are explicitly rejected
-      if (isPersonalEmail(email)) {
-        throw new Error(
-          `Access denied. Personal accounts (${email}) are not authorized institutional accounts. Please sign in with your institutional email.`
-        )
-      }
-
-      // Check against authorized accounts
-      const accounts = getStoredAccounts()
-      const matched = accounts.find((acc) => acc.email.toLowerCase() === email)
-
-      if (!matched) {
-        throw new Error(
-          `Access denied. The account (${email}) is not registered as an authorized institutional user in Acuity. Please contact your laboratory adviser or register.`
-        )
-      }
-
-      if (matched.deactivated) {
-        throw new Error('This account has been deactivated. Please contact your system administrator.')
-      }
-
-      if (!matched.verified) {
-        throw new Error('Your account requires email verification before accessing the workspace.')
-      }
-
-      const sessionUser = { ...matched, authProvider: 'google' }
-      delete sessionUser.password
-
-      setUser(sessionUser)
-      localStorage.setItem(SESSION_STORAGE_KEY, JSON.stringify(sessionUser))
-      return sessionUser
-    } finally {
-      setIsLoading(false)
-    }
-  }, [])
+            // Call the backend sync endpoint first to ensure they exist
+            fetch('http://localhost:3000/api/auth/sync', {
+              method: 'POST',
+              headers: {
+                'Content-Type': 'application/json',
+                'Authorization': `Bearer ${result.getAccessToken().getJwtToken()}`
+              },
+              body: JSON.stringify({ 
+                email: userAttr.email,
+                firstName: userAttr.given_name || '',
+                lastName: userAttr.family_name || ''
+              })
+            }).then(() => {
+              // After sync, fetch the real role
+              return fetch('http://localhost:3000/api/auth/me', {
+                method: 'GET',
+                headers: {
+                  'Authorization': `Bearer ${result.getAccessToken().getJwtToken()}`
+                }
+              });
+            })
+            .then(res => res.json())
+            .then(data => {
+              const dbUser = data.user;
+              const sessionUser = {
+                id: dbUser?.id || cognitoUser.getUsername(),
+                email: userAttr.email,
+                role: normalizeRole(dbUser?.role?.name),
+                username: cognitoUser.getUsername(),
+                cognitoSession: result
+              };
+              setUser(sessionUser);
+              setIsLoading(false);
+              resolve(sessionUser);
+            })
+            .catch(err => {
+              console.error("Failed to sync or fetch user from backend database:", err);
+              // Fallback
+              const sessionUser = {
+                id: cognitoUser.getUsername(),
+                email: userAttr.email,
+                role: ROLES.STUDENT,
+                username: cognitoUser.getUsername(),
+                cognitoSession: result
+              };
+              setUser(sessionUser);
+              setIsLoading(false);
+              resolve(sessionUser);
+            });
+          });
+        },
+        onFailure: (err) => {
+          setIsLoading(false);
+          reject(err);
+        },
+      });
+    });
+  }, []);
 
   /**
-   * Reset Password Simulation.
-   */
-  const resetPassword = useCallback(async (email, newPassword) => {
-    setIsLoading(true)
-    try {
-      await new Promise((resolve) => setTimeout(resolve, 400))
-      const trimmedEmail = (email || '').trim().toLowerCase()
-      const accounts = getStoredAccounts()
-      const target = accounts.find((acc) => acc.email.toLowerCase() === trimmedEmail)
-      if (target) {
-        target.password = newPassword
-        saveStoredAccounts(accounts)
-      }
-      return true
-    } finally {
-      setIsLoading(false)
-    }
-  }, [])
-
-  /**
-   * Sign out and clear active session.
+   * Sign out and clear active session
    */
   const logout = useCallback(async () => {
-    setIsLoading(true)
-    try {
-      await new Promise((resolve) => setTimeout(resolve, 150))
-      setUser(null)
-      localStorage.removeItem(SESSION_STORAGE_KEY)
-    } finally {
-      setIsLoading(false)
+    setIsLoading(true);
+    const currentUser = userPool.getCurrentUser();
+    if (currentUser) {
+      currentUser.signOut();
     }
-  }, [])
+    setUser(null);
+    setIsLoading(false);
+  }, []);
 
-  /**
-   * Update profile fields (First Name, Last Name, display_name, biography, avatar, etc.)
-   * Persists to active session and stored mock accounts.
-   */
-  const updateProfile = useCallback(async (updates) => {
-    setIsLoading(true)
-    try {
-      await new Promise((resolve) => setTimeout(resolve, 300))
-      let updatedUser = null
-      setUser((prev) => {
-        if (!prev) return null
-        updatedUser = { ...prev, ...updates }
-        try {
-          localStorage.setItem(SESSION_STORAGE_KEY, JSON.stringify(updatedUser))
-          const accounts = getStoredAccounts()
-          const idx = accounts.findIndex(
-            (acc) => acc.id === updatedUser.id || (acc.email && acc.email.toLowerCase() === updatedUser.email?.toLowerCase())
-          )
-          if (idx !== -1) {
-            accounts[idx] = { ...accounts[idx], ...updates }
-            saveStoredAccounts(accounts)
-          } else {
-            accounts.push(updatedUser)
-            saveStoredAccounts(accounts)
-          }
-        } catch {
-          // ignore
+  const resendOtp = useCallback(async (email) => {
+    setIsLoading(true);
+    return new Promise((resolve, reject) => {
+      const cognitoUser = new CognitoUser({
+        Username: email,
+        Pool: userPool,
+      });
+
+      cognitoUser.resendConfirmationCode((err, result) => {
+        setIsLoading(false);
+        if (err) {
+          reject(err);
+          return;
         }
-        return updatedUser
-      })
-      return updatedUser
-    } finally {
-      setIsLoading(false)
-    }
-  }, [])
+        resolve(result);
+      });
+    });
+  }, []);
 
-  /**
-   * Change password flow: current password -> new password -> confirm new password.
-   */
-  const changePassword = useCallback(async (currentPassword, newPassword) => {
-    setIsLoading(true)
-    try {
-      await new Promise((resolve) => setTimeout(resolve, 350))
-      const accounts = getStoredAccounts()
-      const target = accounts.find(
-        (acc) => acc.id === user?.id || (acc.email && acc.email.toLowerCase() === user?.email?.toLowerCase())
-      )
-      const defaultPass = user?.role === ROLES.STUDENT ? 'student' : user?.role === ROLES.FACULTY ? 'faculty' : 'systemadmin'
-      const expectedPassword = target?.password || defaultPass
-      if (currentPassword !== expectedPassword) {
-        throw new Error('Current password is incorrect.')
-      }
-      if (target) {
-        target.password = newPassword
-        saveStoredAccounts(accounts)
-      }
-      return true
-    } finally {
-      setIsLoading(false)
-    }
-  }, [user])
+  const loginWithGoogle = useCallback(async () => {
+    alert("Google SSO is not configured in AWS Cognito yet. Please use standard email sign in.");
+  }, []);
 
-  /**
-   * Deactivate account flow: marks account as inactive for future logins and ends session.
-   */
-  const deactivateAccount = useCallback(async () => {
-    setIsLoading(true)
-    try {
-      await new Promise((resolve) => setTimeout(resolve, 400))
-      if (user) {
-        const accounts = getStoredAccounts()
-        const target = accounts.find(
-          (acc) => acc.id === user.id || (acc.email && acc.email.toLowerCase() === user.email?.toLowerCase())
-        )
-        if (target) {
-          target.deactivated = true
-          target.verified = false
-          saveStoredAccounts(accounts)
-        }
-      }
-      setUser(null)
-      localStorage.removeItem(SESSION_STORAGE_KEY)
-      return true
-    } finally {
-      setIsLoading(false)
-    }
-  }, [user])
+  const forgotPassword = useCallback(async (email) => {
+    setIsLoading(true);
+    return new Promise((resolve, reject) => {
+      const cognitoUser = new CognitoUser({
+        Username: email,
+        Pool: userPool,
+      });
+
+      cognitoUser.forgotPassword({
+        onSuccess: function (data) {
+          setIsLoading(false);
+          resolve(data);
+        },
+        onFailure: function (err) {
+          setIsLoading(false);
+          reject(err);
+        },
+      });
+    });
+  }, []);
+
+  const confirmPasswordReset = useCallback(async (email, verificationCode, newPassword) => {
+    setIsLoading(true);
+    return new Promise((resolve, reject) => {
+      const cognitoUser = new CognitoUser({
+        Username: email,
+        Pool: userPool,
+      });
+
+      cognitoUser.confirmPassword(verificationCode, newPassword, {
+        onSuccess: function () {
+          setIsLoading(false);
+          resolve();
+        },
+        onFailure: function (err) {
+          setIsLoading(false);
+          reject(err);
+        },
+      });
+    });
+  }, []);
+
+  const updateProfile = useCallback(async () => {}, []);
+  const changePassword = useCallback(async () => {}, []);
+  const deactivateAccount = useCallback(async () => {}, []);
 
   const value = useMemo(
     () => ({
@@ -473,40 +331,27 @@ export function AuthProvider({ children }) {
       isAuthenticated,
       isLoading,
       login,
-      loginWithGoogle,
       registerUser,
       verifyOtp,
       resendOtp,
-      resetPassword,
       logout,
+      loginWithGoogle,
+      forgotPassword,
+      confirmPasswordReset,
       updateProfile,
       changePassword,
-      deactivateAccount,
+      deactivateAccount
     }),
-    [
-      user,
-      isAuthenticated,
-      isLoading,
-      login,
-      loginWithGoogle,
-      registerUser,
-      verifyOtp,
-      resendOtp,
-      resetPassword,
-      logout,
-      updateProfile,
-      changePassword,
-      deactivateAccount,
-    ]
-  )
+    [user, isAuthenticated, isLoading, login, registerUser, verifyOtp, resendOtp, logout, loginWithGoogle, forgotPassword, confirmPasswordReset, updateProfile, changePassword, deactivateAccount]
+  );
 
-  return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>
+  return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;
 }
 
 export function useAuth() {
-  const context = useContext(AuthContext)
+  const context = useContext(AuthContext);
   if (!context) {
-    throw new Error('useAuth must be used within an AuthProvider')
+    throw new Error('useAuth must be used within an AuthProvider');
   }
-  return context
+  return context;
 }
