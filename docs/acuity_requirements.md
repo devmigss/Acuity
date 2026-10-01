@@ -147,7 +147,7 @@ The capstone specifies the following server-side technologies and infrastructure
 | Python 3 + FastAPI       | Computer Vision / AI microservice                             |
 | OpenCV                   | ROI masking and computer vision processing                    |
 | SOD-YOLOv8               | Small-object colony detection model                           |
-| Amazon RDS / PostgreSQL  | Primary relational database                                   |
+| PostgreSQL via Supabase  | Primary relational database                                   |
 | Amazon DynamoDB          | Supplementary storage for raw AI output logs and audit trails |
 | Redis                    | Processing queue / in-memory store                            |
 | Amazon S3                | Raw and web-resolution image storage                          |
