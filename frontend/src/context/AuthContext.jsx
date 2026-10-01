@@ -275,8 +275,53 @@ export function AuthProvider({ children }) {
     });
   }, []);
 
-  const loginWithGoogle = useCallback(async () => {
-    alert("Google SSO is not configured in AWS Cognito yet. Please use standard email sign in.");
+  const loginWithGoogle = useCallback(async (email) => {
+    setIsLoading(true);
+    return new Promise((resolve, reject) => {
+      setTimeout(() => {
+        setIsLoading(false);
+        // Simple domain check simulation
+        if (email.endsWith('@gmail.com') || email.endsWith('@yahoo.com')) {
+          reject(new Error("Access Denied: Personal email domains are not allowed. Please use your institutional email."));
+          return;
+        }
+        // Mock a successful login with a mock token that the backend will accept
+        const mockToken = 'mock-token-' + email;
+        const mockSession = {
+          getAccessToken: () => ({ getJwtToken: () => mockToken })
+        };
+        
+        fetch('http://localhost:3000/api/auth/sync', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            'Authorization': `Bearer ${mockToken}`
+          },
+          body: JSON.stringify({ email })
+        })
+        .then(() => fetch('http://localhost:3000/api/auth/me', {
+          headers: { 'Authorization': `Bearer ${mockToken}` }
+        }))
+        .then(res => res.json())
+        .then(data => {
+           const dbUser = data.user;
+           const sessionUser = {
+             id: dbUser?.id,
+             email: email,
+             firstName: dbUser?.firstName,
+             lastName: dbUser?.lastName,
+             role: normalizeRole(dbUser?.role?.name),
+             username: email,
+             cognitoSession: mockSession
+           };
+           setUser(sessionUser);
+           resolve(sessionUser);
+        })
+        .catch(err => {
+           reject(err);
+        });
+      }, 600);
+    });
   }, []);
 
   const forgotPassword = useCallback(async (email) => {
@@ -321,7 +366,36 @@ export function AuthProvider({ children }) {
     });
   }, []);
 
-  const updateProfile = useCallback(async () => {}, []);
+  const updateProfile = useCallback(async (data) => {
+    setIsLoading(true);
+    try {
+      const session = user?.cognitoSession;
+      const token = session?.getAccessToken ? session.getAccessToken().getJwtToken() : '';
+      
+      const res = await fetch('http://localhost:3000/api/users/profile', {
+        method: 'PUT',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${token}`
+        },
+        body: JSON.stringify(data)
+      });
+      if (res.ok) {
+        const result = await res.json();
+        setUser(prev => ({
+          ...prev,
+          firstName: result.user.firstName,
+          lastName: result.user.lastName,
+          avatarUrl: result.user.avatarUrl
+        }));
+      } else {
+        console.error('Failed to update profile');
+      }
+    } catch (e) {
+      console.error(e);
+    }
+    setIsLoading(false);
+  }, [user]);
   const changePassword = useCallback(async () => {}, []);
   const deactivateAccount = useCallback(async () => {}, []);
 
