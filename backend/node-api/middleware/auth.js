@@ -19,6 +19,26 @@ const requireAuth = async (req, res, next) => {
 
   const token = authHeader.split(' ')[1];
 
+  // Dev only mock token bypass for local teammate simulation
+  if (process.env.NODE_ENV !== 'production' && token.startsWith('mock-token-')) {
+    const email = token.split('mock-token-')[1];
+    const { prisma } = require('../utils/db');
+    
+    try {
+      let user = await prisma.user.findFirst({ where: { email } });
+      if (user) {
+        req.user = { sub: user.cognitoId, email: user.email };
+      } else {
+        // Just mock it so /sync can create it
+        req.user = { sub: 'mock-sso-' + email, email };
+      }
+      return next();
+    } catch (e) {
+      console.error(e);
+      return res.status(401).json({ error: 'Mock auth failed' });
+    }
+  }
+
   try {
     // Verify the token
     const payload = await verifier.verify(token);
