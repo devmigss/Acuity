@@ -34,23 +34,54 @@ Designed as a modern web alternative to legacy software like ImageJ, it utilizes
 
 ## 🚀 Getting Started (For Developers)
 
-### 1. Initial Setup
+### 1. Prerequisites
+- **Node.js 18+** & **Docker Desktop** installed and running.
+- Ensure your `.env` is configured in `backend/node-api/.env` (see `.env.example`).
 
-Make sure you have Node.js 18+ and Python 3.12+ installed. Run the root install to setup the workspaces:
-
+### 2. Start Infrastructure (Docker)
+From the repository root:
 ```bash
-npm run install:all
+docker compose up -d
 ```
+*This starts PostgreSQL on port `5432` and Redis on port `6379`.*
 
-### 2. Downloading AI Weights (Required)
-
-Since our PyTorch and YOLOv8 models are too large for Git, they are not included when you clone this repo. You **must** download them manually before running the AI microservice.
-
-Run the provided download script from your terminal:
-
+### 3. Install Dependencies & Initialize Database (First-time or Reset)
 ```bash
-cd backend/python-ai
-python scripts/download_weights.py
-```
+# 1. Install root & workspace dependencies
+npm install
 
-_This script will fetch the latest weights and place them securely inside the ignored `ml_core/base_weights/` directory._
+# 2. Run migrations and seed database
+cd backend/node-api
+npx prisma migrate dev
+npx prisma db seed
+cd ../..
+```
+> **Tip:** You can also run `npx prisma migrate reset --force` inside `backend/node-api` to wipe, re-migrate, and re-seed the test accounts in one step.
+
+### 4. Running the Project (3 Terminals)
+
+- **Terminal 1 (Backend API - Port 3000):**
+  ```bash
+  npm run start:api
+  ```
+  *(Or `cd backend/node-api && npm run dev` for auto-reloading)*
+
+- **Terminal 2 (Frontend Web App - Port 5173):**
+  ```bash
+  npm run dev:frontend
+  ```
+  *(Or `cd frontend && npm run dev`)*
+
+- **Terminal 3 (Prisma Studio - Database UI - Port 5555):**
+  ```bash
+  cd backend/node-api
+  npx prisma studio
+  ```
+  *Opens `http://localhost:5555` to view and inspect Tenants, Users, Whitelist, and Projects.*
+
+### 5. Running Automated Tests
+To run the automated Vitest test suite against `acuity_test`:
+```bash
+npm run test:api
+```
+*(Or inside `backend/node-api`: `npm test`)*

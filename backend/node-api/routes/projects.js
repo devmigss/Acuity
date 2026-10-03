@@ -1,6 +1,7 @@
 const express = require('express');
 const { requireAuth } = require('../middleware/auth');
 const { prisma } = require('../utils/db');
+const { generateProjectCode } = require('../utils/nanoid'); // TODO(Part 2)
 
 const router = express.Router();
 
@@ -20,10 +21,12 @@ router.post('/', requireAuth, async (req, res) => {
     const user = await prisma.user.findUnique({ where: { cognitoId } });
     if (!user) return res.status(404).json({ error: 'User not found' });
 
+    // TODO(Part 2): Full project creation rewrite and nanoid validation
     const project = await prisma.project.create({
       data: {
         name,
         description,
+        code: generateProjectCode(),
         ownerId: user.id,
         tenantId: user.tenantId,
       }

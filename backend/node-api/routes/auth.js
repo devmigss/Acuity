@@ -46,14 +46,11 @@ router.post('/sync', requireAuth, async (req, res) => {
     }
 
     // 3. If user doesn't exist, we must create them.
-    // First, ensure we have a Default Tenant and a Student Role
-    let defaultTenant = await prisma.tenant.findFirst({
-      where: { name: 'Default' }
-    });
-    
+    // TODO(Part 2): Full auth sync rewrite with institutional domain lookup
+    let defaultTenant = await prisma.tenant.findFirst();
     if (!defaultTenant) {
       defaultTenant = await prisma.tenant.create({
-        data: { name: 'Default' }
+        data: { institutionName: 'Default', emailDomain: 'default.local', isActive: true }
       });
     }
 
@@ -77,9 +74,9 @@ router.post('/sync', requireAuth, async (req, res) => {
       });
     }
 
-    // Check if the user is in the Faculty Whitelist
+    // TODO(Part 2): Faculty whitelist check by allowedEmail
     const whitelisted = await prisma.facultyWhitelist.findUnique({
-      where: { email: (email || '').toLowerCase() }
+      where: { allowedEmail: (email || '').toLowerCase() }
     });
 
     const assignedRoleId = whitelisted ? facultyRole.id : studentRole.id;
@@ -98,13 +95,13 @@ router.post('/sync', requireAuth, async (req, res) => {
       include: { tenant: true, role: true }
     });
 
-    // Mark the whitelist entry as Claimed if they were a faculty member
-    if (whitelisted && whitelisted.status !== 'Claimed') {
+    // TODO(Part 2): Whitelist status transition to REGISTERED and registeredUserId linking
+    if (whitelisted && whitelisted.status !== 'REGISTERED') {
       await prisma.facultyWhitelist.update({
         where: { id: whitelisted.id },
         data: {
-          status: 'Claimed',
-          claimedAt: new Date()
+          status: 'REGISTERED',
+          registeredUserId: user.id
         }
       });
     }

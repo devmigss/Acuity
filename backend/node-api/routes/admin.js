@@ -10,8 +10,9 @@ const router = express.Router();
  */
 router.get('/whitelist', requireAuth, async (req, res) => {
   try {
+    // TODO(Part 2): Whitelist route rewrite with proper tenant filtering and pagination
     const whitelist = await prisma.facultyWhitelist.findMany({
-      orderBy: { invitedAt: 'desc' }
+      orderBy: { dateAdded: 'desc' }
     });
     return res.json({ whitelist });
   } catch (error) {
@@ -31,20 +32,23 @@ router.post('/whitelist', requireAuth, async (req, res) => {
   }
 
   try {
+    // TODO(Part 2): Replace with allowedEmail lookup
     const existing = await prisma.facultyWhitelist.findUnique({
-      where: { email: email.toLowerCase() }
+      where: { allowedEmail: email.toLowerCase() }
     });
     
     if (existing) {
       return res.status(400).json({ error: 'Email already whitelisted.' });
     }
 
+    // TODO(Part 2): Whitelist creation rewrite with tenant selection and admin ID
+    const devTenant = await prisma.tenant.findFirst();
     const newEntry = await prisma.facultyWhitelist.create({
       data: {
-        email: email.toLowerCase(),
-        institution,
-        department,
-        whitelistedBy: 'System Administrator', // Ideally derived from req.user
+        allowedEmail: email.toLowerCase(),
+        tenantId: devTenant ? devTenant.id : institution,
+        addedByAdminId: 'system-admin',
+        status: 'PENDING_REGISTRATION',
       }
     });
     

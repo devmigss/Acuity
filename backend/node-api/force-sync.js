@@ -11,9 +11,10 @@ async function main() {
   console.log(`Forcing sync for: ${email}`);
 
   // Create default tenant and role if they don't exist
-  let tenant = await prisma.tenant.findFirst({ where: { name: 'Default' } });
+  // TODO(Part 2): Update to new Tenant schema
+  let tenant = await prisma.tenant.findFirst({ where: { institutionName: 'Default' } });
   if (!tenant) {
-    tenant = await prisma.tenant.create({ data: { name: 'Default' } });
+    tenant = await prisma.tenant.create({ data: { institutionName: 'Default', emailDomain: 'default.local', isActive: true } });
   }
 
   let role = await prisma.role.findUnique({ where: { name: 'Admin' } });

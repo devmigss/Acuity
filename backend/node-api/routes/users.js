@@ -25,7 +25,7 @@ router.get('/', requireAuth, async (req, res) => {
       name: `${user.firstName || ''} ${user.lastName || ''}`.trim() || user.email.split('@')[0],
       email: user.email,
       role: user.role?.name || 'Student',
-      institution: user.tenant?.name || 'Unknown Institution',
+      institution: user.tenant?.institutionName || user.tenant?.name || 'Unknown Institution', // TODO(Part 2)
       status: 'Active'
     }));
 

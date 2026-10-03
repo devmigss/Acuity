@@ -1,6 +1,6 @@
 generator client {
   provider = "prisma-client-js"
-  output   = "../../node_modules/@prisma/client"
+  output   = "../node_modules/@prisma/client"
 }
 
 datasource db {
@@ -8,13 +8,46 @@ datasource db {
   url      = env("DATABASE_URL")
 }
 
+enum WhitelistStatus {
+  PENDING_REGISTRATION
+  REGISTERED
+  REVOKED
+}
+
+enum ProjectStatus {
+  DRAFT
+  PROCESSING
+  READY_FOR_REVIEW
+  REVISION_REQUIRED
+  RESUBMITTED
+  APPROVED
+}
+
+enum AdviserLinkStatus {
+  PENDING
+  ACTIVE
+  DECLINED
+  EXPIRED
+  REMOVED
+  CANCELLED
+}
+
+enum AdviserInitiator {
+  STUDENT
+  ADVISER
+  ADMIN
+}
+
 model Tenant {
-  id        String   @id @default(uuid())
-  name      String
-  users     User[]
-  projects  Project[]
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
+  id              String             @id @default(uuid())
+  institutionName String
+  emailDomain     String             @unique
+  isActive        Boolean            @default(true)
+  users           User[]
+  projects        Project[]
+  whitelists      FacultyWhitelist[]
+  createdAt       DateTime           @default(now())
+  updatedAt       DateTime           @updatedAt
 }
 
 model Role {
@@ -26,66 +59,105 @@ model Role {
 }
 
 model User {
-  id        String   @id @default(uuid())
-  cognitoId String   @unique
-  email     String   @unique
-  firstName String?
-  lastName  String?
-  avatarUrl String?
-  tenantId  String
-  tenant    Tenant   @relation(fields: [tenantId], references: [id])
-  roleId    String
-  role      Role     @relation(fields: [roleId], references: [id])
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
-  
-  // Relations
-  projectsOwned Project[]
-  projectMemberships ProjectMember[]
+  id                  String            @id @default(uuid())
+  cognitoId           String            @unique
+  email               String            @unique
+  firstName           String?
+  lastName            String?
+  avatarUrl           String?
+  isActive            Boolean           @default(true)
+  termsAcceptedAt     DateTime?
+  tenantId            String?
+  tenant              Tenant?           @relation(fields: [tenantId], references: [id])
+  roleId              String
+  role                Role              @relation(fields: [roleId], references: [id])
+  registeredWhitelist FacultyWhitelist?
+  projectsOwned       Project[]
+  projectMemberships  ProjectMember[]
+  adviserLinks        ProjectAdviser[]  @relation("UserAdviserLinks")
+  notifications       Notification[]
+  createdAt           DateTime          @default(now())
+  updatedAt           DateTime          @updatedAt
 }
 
 model Project {
-  id          String   @id @default(uuid())
+  id          String           @id @default(uuid())
+  code        String           @unique
   name        String
   description String?
-  status      String   @default("DRAFT") // DRAFT, IN_REVIEW, COMPLETED
-  
+  status      ProjectStatus    @default(DRAFT)
   tenantId    String
-  tenant      Tenant   @relation(fields: [tenantId], references: [id])
-  
+  tenant      Tenant           @relation(fields: [tenantId], references: [id])
   ownerId     String
-  owner       User     @relation(fields: [ownerId], references: [id])
-  
+  owner       User             @relation(fields: [ownerId], references: [id])
   members     ProjectMember[]
-  
-  createdAt   DateTime @default(now())
-  updatedAt   DateTime @updatedAt
+  advisers    ProjectAdviser[]
+  createdAt   DateTime         @default(now())
+  updatedAt   DateTime         @updatedAt
 }
 
 model ProjectMember {
   id              String   @id @default(uuid())
-  
   projectId       String
   project         Project  @relation(fields: [projectId], references: [id], onDelete: Cascade)
-  
   userId          String
   user            User     @relation(fields: [userId], references: [id], onDelete: Cascade)
-  
   permissionLevel String   @default("VIEWER") // VIEWER, EDITOR, FACULTY_REVIEWER
-  
   createdAt       DateTime @default(now())
   updatedAt       DateTime @updatedAt
 
-  @@unique([projectId, userId]) // A user can only have one membership per project
+  @@unique([projectId, userId])
 }
 
 model FacultyWhitelist {
-  id            String    @id @default(uuid())
-  email         String    @unique
-  institution   String
-  department    String?
-  status        String    @default("Invitation Sent") // "Invitation Sent", "Claimed"
-  invitedAt     DateTime  @default(now())
-  claimedAt     DateTime?
-  whitelistedBy String    @default("System Administrator")
+  id               String          @id @default(uuid())
+  allowedEmail     String          @unique
+  tenantId         String
+  tenant           Tenant          @relation(fields: [tenantId], references: [id])
+  status           WhitelistStatus @default(PENDING_REGISTRATION)
+  addedByAdminId   String
+  registeredUserId String?         @unique
+  registeredUser   User?           @relation(fields: [registeredUserId], references: [id])
+  dateAdded        DateTime        @default(now())
+  revokedAt        DateTime?
+}
+
+model ProjectAdviser {
+  id                String            @id @default(uuid())
+  projectId         String
+  project           Project           @relation(fields: [projectId], references: [id], onDelete: Cascade)
+  adviserUserId     String
+  adviserUser       User              @relation("UserAdviserLinks", fields: [adviserUserId], references: [id], onDelete: Cascade)
+  status            AdviserLinkStatus @default(PENDING)
+  initiatedBy       AdviserInitiator
+  requestedByUserId String
+  reason            String?
+  createdAt         DateTime          @default(now())
+  respondedAt       DateTime?
+  expiresAt         DateTime?
+}
+
+model Notification {
+  id        String    @id @default(uuid())
+  userId    String
+  user      User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+  type      String
+  title     String
+  body      String
+  data      Json?
+  readAt    DateTime?
+  createdAt DateTime  @default(now())
+}
+
+model AuditLog {
+  id        String   @id @default(uuid())
+  at        DateTime @default(now())
+  actorId   String?
+  actorRole String?
+  tenantId  String?
+  action    String
+  resource  String?
+  before    Json?
+  after     Json?
+  ip        String?
 }
