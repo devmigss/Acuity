@@ -85,15 +85,15 @@ export default function DashboardHeader({ isMobileMenuOpen, onToggleMobileMenu }
               </div>
             </div>
 
-            {user?.avatar ? (
+            {(user?.avatarUrl || user?.avatar) ? (
               <img
-                src={user.avatar}
+                src={user.avatarUrl || user.avatar}
                 alt={user.displayName || 'User'}
                 className="w-9 h-9 rounded-full object-cover border border-white/20 shadow-xs shrink-0"
               />
             ) : (
               <div className="w-9 h-9 rounded-full bg-accent-400 text-[#0B1F3A] flex items-center justify-center font-bold text-xs shrink-0 shadow-xs">
-                {user?.displayName ? user.displayName.charAt(0).toUpperCase() : 'U'}
+                {user?.displayName ? user.displayName.charAt(0).toUpperCase() : (user?.firstName ? user.firstName.charAt(0).toUpperCase() : 'U')}
               </div>
             )}
           </Link>

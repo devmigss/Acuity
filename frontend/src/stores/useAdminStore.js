@@ -11,6 +11,7 @@
 
 import { create } from 'zustand'
 import { ROLES } from '@/constants/roles'
+import { api } from '@/services/api/apiClient'
 
 const ADMIN_STORAGE_KEY = 'acuity_mock_admin_data_v2'
 const MOCK_ACCOUNTS_KEY = 'acuity_mock_accounts_v2'
@@ -245,23 +246,8 @@ export const useAdminStore = create((set, get) => ({
   /* ── Getters ── */
   fetchUsers: async () => {
     try {
-      const response = await fetch('http://localhost:3000/api/users', {
-        headers: {
-          'Authorization': `Bearer ${sessionStorage.getItem('acuity_token') || await (async () => {
-             const session = await new Promise(async r => {
-               const cognito = await import('../services/cognito');
-               const user = cognito.userPool.getCurrentUser();
-               if(!user) return r(null);
-               user.getSession((err, s) => r(s));
-             });
-             return session ? session.getAccessToken().getJwtToken() : '';
-          })()}`
-        }
-      });
-      if (response.ok) {
-        const data = await response.json();
-        set({ users: data.users || [], platformUsers: data.users || [] });
-      }
+      const data = await api.get('/users');
+      set({ users: data.users || [], platformUsers: data.users || [] });
     } catch (e) {
       console.error("Failed to fetch users from API", e);
     }
@@ -269,23 +255,8 @@ export const useAdminStore = create((set, get) => ({
 
   fetchWhitelist: async () => {
     try {
-      const response = await fetch('http://localhost:3000/api/admin/whitelist', {
-        headers: {
-          'Authorization': `Bearer ${sessionStorage.getItem('acuity_token') || await (async () => {
-             const session = await new Promise(async r => {
-               const cognito = await import('../services/cognito');
-               const user = cognito.userPool.getCurrentUser();
-               if(!user) return r(null);
-               user.getSession((err, s) => r(s));
-             });
-             return session ? session.getAccessToken().getJwtToken() : '';
-          })()}`
-        }
-      });
-      if (response.ok) {
-        const data = await response.json();
-        set({ facultyWhitelist: data.whitelist || [] });
-      }
+      const data = await api.get('/admin/whitelist');
+      set({ facultyWhitelist: data.whitelist || [] });
     } catch (e) {
       console.error("Failed to fetch whitelist from API", e);
     }
@@ -489,28 +460,11 @@ export const useAdminStore = create((set, get) => ({
     }
 
     try {
-      const response = await fetch('http://localhost:3000/api/admin/whitelist', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          'Authorization': `Bearer ${sessionStorage.getItem('acuity_token') || await (async () => {
-             const session = await new Promise(async r => {
-               const cognito = await import('../services/cognito');
-               const user = cognito.userPool.getCurrentUser();
-               if(!user) return r(null);
-               user.getSession((err, s) => r(s));
-             });
-             return session ? session.getAccessToken().getJwtToken() : '';
-          })()}`
-        },
-        body: JSON.stringify({ email: trimmedEmail, institution, department })
+      const data = await api.post('/admin/whitelist', {
+        email: trimmedEmail,
+        institution,
+        department,
       });
-
-      const data = await response.json();
-      
-      if (!response.ok) {
-        throw new Error(data.error || 'Failed to add to whitelist');
-      }
 
       await get().fetchWhitelist();
       return data.entry;
@@ -569,28 +523,13 @@ export const useAdminStore = create((set, get) => ({
 
   revokeWhitelistEntry: async (id) => {
     try {
-      const response = await fetch(`http://localhost:3000/api/admin/whitelist/${id}`, {
-        method: 'DELETE',
-        headers: {
-          'Authorization': `Bearer ${sessionStorage.getItem('acuity_token') || await (async () => {
-             const session = await new Promise(async r => {
-               const cognito = await import('../services/cognito');
-               const user = cognito.userPool.getCurrentUser();
-               if(!user) return r(null);
-               user.getSession((err, s) => r(s));
-             });
-             return session ? session.getAccessToken().getJwtToken() : '';
-          })()}`
-        }
-      });
-      if (response.ok) {
-        await get().fetchWhitelist();
-        return true;
-      }
+      await api.delete(`/admin/whitelist/${id}`);
+      await get().fetchWhitelist();
+      return true;
     } catch (e) {
-      console.error(e);
+      console.error("Revoke whitelist entry error:", e);
+      return false;
     }
-    return false;
   },
 
   /* ══════════════════════════════════════════════════════════════

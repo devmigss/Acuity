@@ -35,9 +35,14 @@ async function main() {
   });
   console.log(`Dev Tenant seeded: ${devTenant.institutionName} (${devTenant.emailDomain})`);
 
-  // 3. Admin User (warry4958@gmail.com) -> tenantId is null
-  const adminEmail = 'warry4958@gmail.com';
-  const adminCognitoId = `seed:${adminEmail}`;
+  // 3. Admin User (acuityadmincfu@gmail.com) -> tenantId is null
+  const adminEmail = 'acuityadmincfu@gmail.com';
+  const existingAdmin = await prisma.user.findUnique({ where: { email: adminEmail } });
+  const adminCognitoId =
+    existingAdmin?.cognitoId && !existingAdmin.cognitoId.startsWith('seed:')
+      ? existingAdmin.cognitoId
+      : `seed:${adminEmail}`;
+
   const adminUser = await prisma.user.upsert({
     where: { email: adminEmail },
     update: {
@@ -49,7 +54,7 @@ async function main() {
     create: {
       email: adminEmail,
       cognitoId: adminCognitoId,
-      firstName: 'Warren',
+      firstName: 'Acuity',
       lastName: 'Admin',
       roleId: roleMap['Admin'].id,
       tenantId: null,
@@ -58,9 +63,14 @@ async function main() {
   });
   console.log(`Admin User seeded: ${adminUser.email} (tenantId = null)`);
 
-  // 4. Faculty User (warrenrchua@gmail.com) -> devTenant
-  const facultyEmail = 'warrenrchua@gmail.com';
-  const facultyCognitoId = `seed:${facultyEmail}`;
+  // 4. Faculty User (acuityfacultycfu@gmail.com) -> devTenant
+  const facultyEmail = 'acuityfacultycfu@gmail.com';
+  const existingFaculty = await prisma.user.findUnique({ where: { email: facultyEmail } });
+  const facultyCognitoId =
+    existingFaculty?.cognitoId && !existingFaculty.cognitoId.startsWith('seed:')
+      ? existingFaculty.cognitoId
+      : `seed:${facultyEmail}`;
+
   const facultyUser = await prisma.user.upsert({
     where: { email: facultyEmail },
     update: {
@@ -72,8 +82,8 @@ async function main() {
     create: {
       email: facultyEmail,
       cognitoId: facultyCognitoId,
-      firstName: 'Warren',
-      lastName: 'Chua',
+      firstName: 'Acuity',
+      lastName: 'Faculty',
       roleId: roleMap['Faculty'].id,
       tenantId: devTenant.id,
       isActive: true,

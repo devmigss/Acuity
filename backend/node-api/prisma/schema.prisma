@@ -38,6 +38,17 @@ enum AdviserInitiator {
   ADMIN
 }
 
+enum DeactivatedBy {
+  SELF
+  ADMIN
+}
+
+enum ReactivationRequestStatus {
+  PENDING
+  APPROVED
+  DENIED
+}
+
 model Tenant {
   id              String             @id @default(uuid())
   institutionName String
@@ -59,25 +70,44 @@ model Role {
 }
 
 model User {
-  id                  String            @id @default(uuid())
-  cognitoId           String            @unique
-  email               String            @unique
-  firstName           String?
-  lastName            String?
-  avatarUrl           String?
-  isActive            Boolean           @default(true)
-  termsAcceptedAt     DateTime?
-  tenantId            String?
-  tenant              Tenant?           @relation(fields: [tenantId], references: [id])
-  roleId              String
-  role                Role              @relation(fields: [roleId], references: [id])
-  registeredWhitelist FacultyWhitelist?
-  projectsOwned       Project[]
-  projectMemberships  ProjectMember[]
-  adviserLinks        ProjectAdviser[]  @relation("UserAdviserLinks")
-  notifications       Notification[]
-  createdAt           DateTime          @default(now())
-  updatedAt           DateTime          @updatedAt
+  id                   String                @id @default(uuid())
+  cognitoId            String                @unique
+  email                String                @unique
+  firstName            String?
+  lastName             String?
+  avatarUrl            String?
+  bio                  String?
+  laboratoryGroup      String?
+  department           String?
+  isActive             Boolean               @default(true)
+  deactivatedAt        DateTime?
+  deactivatedBy        DeactivatedBy?
+  sessionsValidAfter   DateTime?
+  termsAcceptedAt      DateTime?
+  tenantId             String?
+  tenant               Tenant?               @relation(fields: [tenantId], references: [id])
+  roleId               String
+  role                 Role                  @relation(fields: [roleId], references: [id])
+  registeredWhitelist  FacultyWhitelist?
+  projectsOwned        Project[]
+  projectMemberships   ProjectMember[]
+  adviserLinks         ProjectAdviser[]      @relation("UserAdviserLinks")
+  notifications        Notification[]
+  reactivationRequests ReactivationRequest[]
+  createdAt            DateTime              @default(now())
+  updatedAt            DateTime              @updatedAt
+}
+
+model ReactivationRequest {
+  id                String                    @id @default(uuid())
+  userId            String
+  user              User                      @relation(fields: [userId], references: [id], onDelete: Cascade)
+  message           String?
+  status            ReactivationRequestStatus @default(PENDING)
+  createdAt         DateTime                  @default(now())
+  resolvedAt        DateTime?
+  resolvedByAdminId String?
+  denyReason        String?
 }
 
 model Project {

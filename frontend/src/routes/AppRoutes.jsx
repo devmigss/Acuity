@@ -25,6 +25,7 @@ import RegisterPage from '@/pages/auth/RegisterPage'
 import OtpPage from '@/pages/auth/OtpPage'
 import ForgotPasswordPage from '@/pages/auth/ForgotPasswordPage'
 import ResetPasswordPage from '@/pages/auth/ResetPasswordPage'
+import AccountDeactivatedPage from '@/pages/auth/AccountDeactivatedPage'
 
 // Shared Authenticated Pages
 import SettingsPage from '@/pages/settings/SettingsPage'
@@ -103,6 +104,12 @@ export default function AppRoutes() {
           element={<ResetPasswordPage />}
         />
       </Route>
+
+      {/* ── Standalone Account Deactivated Page (No Sidebar) ── */}
+      <Route
+        path={ROUTES.ACCOUNT_DEACTIVATED}
+        element={<AccountDeactivatedPage />}
+      />
 
       {/* ── Authenticated Routes (Wrapped in ProtectedRoute & DashboardLayout) ── */}
       <Route element={<ProtectedRoute />}>

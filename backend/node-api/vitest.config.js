@@ -12,5 +12,6 @@ module.exports = defineConfig({
     environment: 'node',
     setupFiles: ['./tests/setup.js'],
     include: ['tests/**/*.test.js'],
+    fileParallelism: false,
   },
 });

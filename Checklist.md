@@ -52,7 +52,7 @@ Edit [`backend/node-api/prisma/schema.prisma`](file:///c:/Acuity%20-%20Github/Ac
 - [x] Migration committed to version control.
 
 ### 1.3 Seed Script & Env Variables
-- [x] `backend/node-api/prisma/seed.js` idempotent upserts for roles, dev tenant (`gmail.com`), Admin (`warry4958@gmail.com`), Faculty (`warrenrchua@gmail.com`), and whitelist entry.
+- [x] `backend/node-api/prisma/seed.js` idempotent upserts for roles, dev tenant (`gmail.com`), Admin (`acuityadmincfu@gmail.com`), Faculty (`acuityfacultycfu@gmail.com`), and whitelist entry.
 - [x] Added `ENFORCE_EDU_DOMAIN=false`, `ADVISER_REQUEST_TTL_DAYS=14`, `MAX_ADVISERS_PER_PROJECT=1` to `.env`.
 
 ### 1.4 Test Harness Setup
@@ -60,21 +60,21 @@ Edit [`backend/node-api/prisma/schema.prisma`](file:///c:/Acuity%20-%20Github/Ac
 
 ---
 
-## PART 2 — Auth Rewrite, Route Guarding & Middleware Stack ⏳ (NEXT TO ACCOMPLISH)
+## PART 2 — Auth Rewrite, Route Guarding & Middleware Stack ✅ (ACCOMPLISHED)
 
 ### 2.1 Centralized Token Handling & Frontend Interceptor
-- [ ] Refactor [`frontend/src/services/api/apiClient.js`](file:///c:/Acuity%20-%20Github/Acuity/frontend/src/services/api/apiClient.js) to be the **single source of truth** for all API communication:
+- [x] Refactor [`frontend/src/services/api/apiClient.js`](file:///c:/Acuity%20-%20Github/Acuity/frontend/src/services/api/apiClient.js) to be the **single source of truth** for all API communication:
   - Inject Cognito **ID Token** via `getIdToken()` into `Authorization: Bearer <token>` header for all requests.
   - Refactor stores ([`useAdminStore.js`](file:///c:/Acuity%20-%20Github/Acuity/frontend/src/stores/useAdminStore.js), [`useProjectStore.js`](file:///c:/Acuity%20-%20Github/Acuity/frontend/src/stores/useProjectStore.js), [`ProfilePage.jsx`](file:///c:/Acuity%20-%20Github/Acuity/frontend/src/pages/profile/ProfilePage.jsx)) to use `apiClient` instead of making ad-hoc `fetch()` calls.
-- [ ] Add global Axios/fetch response interceptor in `apiClient.js` / [`AuthContext.jsx`](file:///c:/Acuity%20-%20Github/Acuity/frontend/src/context/AuthContext.jsx):
+- [x] Add global Axios/fetch response interceptor in `apiClient.js` / [`AuthContext.jsx`](file:///c:/Acuity%20-%20Github/Acuity/frontend/src/context/AuthContext.jsx):
   - Intercept backend `401 NOT_SYNCED` → trigger `/api/auth/sync` flow.
   - Intercept backend `403` error codes: `ACCESS_REVOKED`, `UNRECOGNIZED_INSTITUTION`, `ACCOUNT_DEACTIVATED`, `TENANT_SUSPENDED`.
   - Display user-friendly modal with "Access Denied: Contact your administrator" and initiate Cognito sign-out.
   - **Remove silent fallback to Student role** across frontend stores.
 
 ### 2.2 Backend Token Verification (`middleware/auth.js`)
-- [ ] Switch `CognitoJwtVerifier` in `backend/node-api/middleware/auth.js` to `tokenUse: "id"`.
-- [ ] In `requireAuth`:
+- [x] Switch `CognitoJwtVerifier` in `backend/node-api/middleware/auth.js` to `tokenUse: "id"`.
+- [x] In `requireAuth`:
   - Verify JWT and extract claims: `sub`, `email`, `email_verified`, `given_name`, `family_name`.
   - Reject (`401`) if `email` is missing or `email_verified !== true`.
   - Query DB for user where `cognitoId = sub`, including `role` and `tenant`.
@@ -88,39 +88,39 @@ Edit [`backend/node-api/prisma/schema.prisma`](file:///c:/Acuity%20-%20Github/Ac
 
 ### 2.3 RBAC & Tenant Scoping Middleware (`middleware/rbac.js`)
 Create [`backend/node-api/middleware/rbac.js`](file:///c:/Acuity%20-%20Github/Acuity/backend/node-api/middleware/rbac.js):
-- [ ] **`requireRole(...roles)`** — checks `req.dbUser.role.name` against allowed roles. Returns `403 { code: 'FORBIDDEN', error: 'Insufficient role permissions' }` on mismatch.
-- [ ] **`requireSameTenant(tenantIdExtractor)`** — verifies `req.dbUser.tenantId` matches resource tenant. Returns `404` (not 403) to prevent cross-tenant resource enumeration.
-- [ ] **`requireProjectAccess({ role: 'owner' | 'member' | 'adviser' | 'any' })`** — verifies caller is project owner, `ProjectMember`, or active `ProjectAdviser`.
-- [ ] **`tenantScope(user)`** helper:
+- [x] **`requireRole(...roles)`** — checks `req.dbUser.role.name` against allowed roles. Returns `403 { code: 'FORBIDDEN', error: 'Insufficient role permissions' }` on mismatch.
+- [x] **`requireSameTenant(tenantIdExtractor)`** — verifies `req.dbUser.tenantId` matches resource tenant. Returns `404` (not 403) to prevent cross-tenant resource enumeration.
+- [x] **`requireProjectAccess({ role: 'owner' | 'member' | 'adviser' | 'any' })`** — verifies caller is project owner, `ProjectMember`, or active `ProjectAdviser`.
+- [x] **`tenantScope(user)`** helper:
   - If user has `Admin` role → returns `{}` (or explicit query filter).
   - For non-admins → returns `{ tenantId: user.tenantId }`. Throws an error if `tenantId` is null/undefined for non-admins.
-- [ ] **`auditLog({ actorId, actorRole, tenantId, action, resource, before, after, ip })`** helper — writes to PostgreSQL `AuditLog` (swapped to DynamoDB in Phase 6 without touching callers).
+- [x] **`auditLog({ actorId, actorRole, tenantId, action, resource, before, after, ip })`** helper — writes to PostgreSQL `AuditLog` (swapped to DynamoDB in Phase 6 without touching callers).
 
 ### 2.4 Immediate Route Inventory & Guarding
 Protect all existing route files immediately so tests pass and no endpoints remain exposed:
-- [ ] [`backend/node-api/routes/admin.js`](file:///c:/Acuity%20-%20Github/Acuity/backend/node-api/routes/admin.js):
+- [x] [`backend/node-api/routes/admin.js`](file:///c:/Acuity%20-%20Github/Acuity/backend/node-api/routes/admin.js):
   - Apply `requireAuth` AND `requireRole('Admin')` to all endpoints (`GET /whitelist`, `POST /whitelist`, `DELETE /whitelist/:id`).
-- [ ] [`backend/node-api/routes/users.js`](file:///c:/Acuity%20-%20Github/Acuity/backend/node-api/routes/users.js):
+- [x] [`backend/node-api/routes/users.js`](file:///c:/Acuity%20-%20Github/Acuity/backend/node-api/routes/users.js):
   - `GET /` (list all users) → add `requireRole('Admin')`.
   - `PUT /profile` → keep `requireAuth`, update caller's profile.
-- [ ] [`backend/node-api/routes/uploads.js`](file:///c:/Acuity%20-%20Github/Acuity/backend/node-api/routes/uploads.js):
+- [x] [`backend/node-api/routes/uploads.js`](file:///c:/Acuity%20-%20Github/Acuity/backend/node-api/routes/uploads.js):
   - Guard `POST /image` with `requireAuth`. Validate uploaded file size (< 15MB) and mime-type. (Kept until presigned S3 pipeline in Phase 7).
-- [ ] [`backend/node-api/routes/projects.js`](file:///c:/Acuity%20-%20Github/Acuity/backend/node-api/routes/projects.js):
+- [x] [`backend/node-api/routes/projects.js`](file:///c:/Acuity%20-%20Github/Acuity/backend/node-api/routes/projects.js):
   - Ensure project queries scope by `tenantScope(req.dbUser)`.
   - In `POST /`, ensure `code: generateProjectCode()` is called and validated.
 
 ### 2.5 Rewrite `POST /api/auth/sync` (`routes/auth.js`)
 Edit [`backend/node-api/routes/auth.js`](file:///c:/Acuity%20-%20Github/Acuity/backend/node-api/routes/auth.js):
-- [ ] Extract email strictly from `req.user.email` (never trust `req.body.email`).
-- [ ] Extract names with fallback: `token.given_name || ''`, `token.family_name || ''`.
-- [ ] Wrap sync logic in a Prisma `$transaction`.
-- [ ] **Seed Linking (Dev Only):** If `NODE_ENV !== 'production'`, find user by email where `cognitoId LIKE 'seed:%'` and update `cognitoId = sub`.
-- [ ] **Existing User:**
+- [x] Extract email strictly from `req.user.email` (never trust `req.body.email`).
+- [x] Extract names with fallback: `token.given_name || ''`, `token.family_name || ''`.
+- [x] Wrap sync logic in a Prisma `$transaction`.
+- [x] **Seed Linking (Dev Only):** If `NODE_ENV !== 'production'`, find user by email where `cognitoId LIKE 'seed:%'` and update `cognitoId = sub`.
+- [x] **Existing User:**
   - If `isActive === false` → `403 ACCOUNT_DEACTIVATED`.
   - If Faculty and `FacultyWhitelist.status === 'REVOKED'` → `403 ACCESS_REVOKED`.
   - Do NOT overwrite existing `firstName` and `lastName` if user has already modified their profile in DB.
   - Update `lastLogin: new Date()`, return user.
-- [ ] **New User Flow:**
+- [x] **New User Flow:**
   - Check `FacultyWhitelist` by `allowedEmail = email.toLowerCase()`.
   - Atomic claim: `updateMany({ where: { allowedEmail, status: 'PENDING_REGISTRATION' }, data: { status: 'REGISTERED' } })`.
   - If claimed → create `Faculty` user with whitelist's `tenantId`, link `registeredUserId = user.id`.
@@ -132,18 +132,18 @@ Edit [`backend/node-api/routes/auth.js`](file:///c:/Acuity%20-%20Github/Acuity/b
     - If `ENFORCE_EDU_DOMAIN === true` and domain is not educational → `403 UNRECOGNIZED_INSTITUTION`.
     - If no matching tenant found → `403 UNRECOGNIZED_INSTITUTION`.
     - If tenant found → create `Student` user with `tenantId = tenant.id`.
-- [ ] **Security Invariant:** Never allow `Admin` role creation or arbitrary `tenantId` assignment from `req.body`.
-- [ ] Handle `termsAcceptedAt` timestamp when client sends `termsAccepted: true`.
+- [x] **Security Invariant:** Never allow `Admin` role creation or arbitrary `tenantId` assignment from `req.body`.
+- [x] Handle `termsAcceptedAt` timestamp when client sends `termsAccepted: true`.
 
 ### 2.6 Production Admin Bootstrap Path
-- [ ] Create CLI script `backend/node-api/scripts/bootstrap-admin.js` (`npm run admin:bootstrap -- --email <email>`):
+- [x] Create CLI script `backend/node-api/scripts/bootstrap-admin.js` (`npm run admin:bootstrap -- --email <email>`):
   - Validates `email` exists in local DB or creates an initial Admin record with `tenantId: null`, `role: Admin`, `cognitoId: <cognito-sub>`.
   - Verifies user email is verified in Cognito.
   - Only runnable via CLI with database administrative credentials.
-- [ ] Support optional env allowlist `ADMIN_BOOTSTRAP_EMAILS="warry4958@gmail.com"` to allow designated email to sync as Admin during initial production launch.
+- [x] Support optional env allowlist `ADMIN_BOOTSTRAP_EMAILS="acuityadmincfu@gmail.com"` to allow designated email to sync as Admin during initial production launch.
 
 ### 2.7 Resolve All `// TODO(Part 2)` Markers
-- [ ] Grep and resolve all 10 `// TODO(Part 2)` markers across:
+- [x] Grep and resolve all 10 `// TODO(Part 2)` markers across:
   - `routes/auth.js` (sync rewrite, whitelist linking).
   - `routes/admin.js` (whitelist lookup by `allowedEmail`, tenantId, and admin ID).
   - `routes/projects.js` (project code generation via `nanoid.js`).
@@ -151,29 +151,29 @@ Edit [`backend/node-api/routes/auth.js`](file:///c:/Acuity%20-%20Github/Acuity/b
   - `force-sync.js` (tenant schema updates).
 
 ### 2.8 Security Hardening & CI
-- [ ] Install and configure `helmet` for HTTP security headers in Express.
-- [ ] Configure strict `cors` allowlist (reading from `FRONTEND_URL` env variable).
-- [ ] Add rate limiting using `express-rate-limit`:
+- [x] Install and configure `helmet` for HTTP security headers in Express.
+- [x] Configure strict `cors` allowlist (reading from `FRONTEND_URL` env variable).
+- [x] Add rate limiting using `express-rate-limit`:
   - 10 requests / 15 minutes on `/api/auth/sync`.
   - 30 requests / minute on search routes.
-- [ ] Create `.github/workflows/test.yml` to run Vitest tests on PRs and pushes.
+- [x] Create `.github/workflows/test.yml` to run Vitest tests on PRs and pushes.
 
 ### 2.9 Part 2 Automated Tests (`tests/auth.test.js` & `tests/rbac.test.js`)
-- [ ] Both seeded dev accounts sync successfully (seed linking works).
-- [ ] Forged `req.body.email` is ignored (email taken strictly from verified token).
-- [ ] Token without `email_verified: true` is rejected (`401`).
-- [ ] Whitelisted email creates Faculty user assigned to the whitelist's `tenantId`.
-- [ ] Non-whitelisted email with unknown domain returns `403 UNRECOGNIZED_INSTITUTION`.
-- [ ] Revoked faculty whitelist returns `403 ACCESS_REVOKED`.
-- [ ] Deactivated user (`isActive: false`) with valid token returns `403` on all routes.
-- [ ] User from suspended tenant returns `403 TENANT_SUSPENDED`.
-- [ ] Concurrent sync requests claim whitelist atomically without duplicate user creation.
-- [ ] Non-sync route accessed by un-synced Cognito token returns `401 NOT_SYNCED`.
-- [ ] Non-admin user hitting `/api/admin/*` returns `403 FORBIDDEN`.
-- [ ] Existing user name is not overwritten on sync if DB already contains custom profile name.
+- [x] Both seeded dev accounts sync successfully (seed linking works).
+- [x] Forged `req.body.email` is ignored (email taken strictly from verified token).
+- [x] Token without `email_verified: true` is rejected (`401`).
+- [x] Whitelisted email creates Faculty user assigned to the whitelist's `tenantId`.
+- [x] Non-whitelisted email with unknown domain returns `403 UNRECOGNIZED_INSTITUTION`.
+- [x] Revoked faculty whitelist returns `403 ACCESS_REVOKED`.
+- [x] Deactivated user (`isActive: false`) with valid token returns `403` on all routes.
+- [x] User from suspended tenant returns `403 TENANT_SUSPENDED`.
+- [x] Concurrent sync requests claim whitelist atomically without duplicate user creation.
+- [x] Non-sync route accessed by un-synced Cognito token returns `401 NOT_SYNCED`.
+- [x] Non-admin user hitting `/api/admin/*` returns `403 FORBIDDEN`.
+- [x] Existing user name is not overwritten on sync if DB already contains custom profile name.
 
 > **DONE WHEN (Part 2):**
-> 1. `npm test` runs all Part 1 and Part 2 tests cleanly.
+> 1. `npm test` runs all Part 1 and Part 2 tests cleanly. (35 / 35 PASSING)
 > 2. Non-admin users attempting to access `/api/admin/whitelist` or `/api/users` receive `403 FORBIDDEN`.
 > 3. Frontend `apiClient.js` passes ID tokens and interceptor triggers modal on 403s without fallback.
 > 4. Zero `// TODO(Part 2)` markers remain in `backend/node-api`.

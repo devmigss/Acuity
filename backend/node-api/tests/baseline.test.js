@@ -120,25 +120,25 @@ describe('Part 1 Baseline Database & Schema Tests', () => {
     expect(tenantsFirst[0].emailDomain).toBe('gmail.com');
 
     const adminFirst = await testPrisma.user.findUnique({
-      where: { email: 'warry4958@gmail.com' },
+      where: { email: 'acuityadmincfu@gmail.com' },
       include: { role: true },
     });
     expect(adminFirst).toBeDefined();
     expect(adminFirst.role.name).toBe('Admin');
     expect(adminFirst.tenantId).toBeNull();
-    expect(adminFirst.cognitoId).toBe('seed:warry4958@gmail.com');
+    expect(adminFirst.cognitoId).toBe('seed:acuityadmincfu@gmail.com');
 
     const facultyFirst = await testPrisma.user.findUnique({
-      where: { email: 'warrenrchua@gmail.com' },
+      where: { email: 'acuityfacultycfu@gmail.com' },
       include: { role: true },
     });
     expect(facultyFirst).toBeDefined();
     expect(facultyFirst.role.name).toBe('Faculty');
     expect(facultyFirst.tenantId).toBe(tenantsFirst[0].id);
-    expect(facultyFirst.cognitoId).toBe('seed:warrenrchua@gmail.com');
+    expect(facultyFirst.cognitoId).toBe('seed:acuityfacultycfu@gmail.com');
 
     const whitelistFirst = await testPrisma.facultyWhitelist.findUnique({
-      where: { allowedEmail: 'warrenrchua@gmail.com' },
+      where: { allowedEmail: 'acuityfacultycfu@gmail.com' },
     });
     expect(whitelistFirst).toBeDefined();
     expect(whitelistFirst.status).toBe('REGISTERED');

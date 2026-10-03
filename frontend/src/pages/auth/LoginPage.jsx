@@ -71,6 +71,10 @@ export default function LoginPage() {
 
     try {
       const loggedInUser = await login(formData)
+      if (loggedInUser?.isDeactivated) {
+        navigate(ROUTES.ACCOUNT_DEACTIVATED, { replace: true })
+        return
+      }
       const redirectPath = loggedInUser?.role === 'faculty'
         ? ROUTES.FACULTY.OVERVIEW
         : loggedInUser?.role === 'systemadmin'
@@ -78,6 +82,10 @@ export default function LoginPage() {
         : ROUTES.STUDENT.DASHBOARD
       navigate(redirectPath, { replace: true })
     } catch (err) {
+      if (err?.code === 'ACCOUNT_DEACTIVATED') {
+        navigate(ROUTES.ACCOUNT_DEACTIVATED, { replace: true })
+        return
+      }
       setAuthNotice(err?.message || 'Invalid email or password')
     }
   }
@@ -96,6 +104,10 @@ export default function LoginPage() {
     try {
       const loggedInUser = await loginWithGoogle(email)
       setIsGoogleModalOpen(false)
+      if (loggedInUser?.isDeactivated) {
+        navigate(ROUTES.ACCOUNT_DEACTIVATED, { replace: true })
+        return
+      }
       const redirectPath = loggedInUser?.role === 'faculty'
         ? ROUTES.FACULTY.OVERVIEW
         : loggedInUser?.role === 'systemadmin'
@@ -103,6 +115,11 @@ export default function LoginPage() {
         : ROUTES.STUDENT.DASHBOARD
       navigate(redirectPath, { replace: true })
     } catch (err) {
+      if (err?.code === 'ACCOUNT_DEACTIVATED') {
+        setIsGoogleModalOpen(false)
+        navigate(ROUTES.ACCOUNT_DEACTIVATED, { replace: true })
+        return
+      }
       setGoogleError(err?.message || 'Google SSO authorization check failed.')
     }
   }

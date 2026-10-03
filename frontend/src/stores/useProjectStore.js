@@ -13,6 +13,7 @@
  */
 
 import { create } from 'zustand'
+import { api } from '@/services/api/apiClient'
 
 /* ══════════════════════════════════════════════════════════════
    Processing status constants
@@ -513,21 +514,8 @@ export const useProjectStore = create((set, get) => ({
      
   fetchProjects: async () => {
     try {
-      const response = await fetch('http://localhost:3000/api/projects', {
-        headers: {
-          'Authorization': `Bearer ${sessionStorage.getItem('acuity_token') || await (async () => {
-             const session = await new Promise(async r => {
-               const cognito = await import('../services/cognito');
-               const user = cognito.userPool.getCurrentUser();
-               if(!user) return r(null);
-               user.getSession((err, s) => r(s));
-             });
-             return session ? session.getAccessToken().getJwtToken() : '';
-          })()}`
-        }
-      });
-      if (response.ok) {
-        const data = await response.json();
+      const data = await api.get('/projects');
+      if (data && data.projects) {
         set({ projects: data.projects || [] });
       }
     } catch (e) {

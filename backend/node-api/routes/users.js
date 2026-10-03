@@ -1,78 +1,77 @@
 const express = require('express');
 const { requireAuth } = require('../middleware/auth');
+const { requireRole, auditLog } = require('../middleware/rbac');
 const { prisma } = require('../utils/db');
 
 const router = express.Router();
 
 /**
  * @route GET /api/users
- * @desc Get all users in the system (for Admin Dashboard)
- * @access Private
+ * @desc Get all users in the system (Restricted to Admin Dashboard)
+ * @access Private (Admin only)
  */
-router.get('/', requireAuth, async (req, res) => {
+router.get('/', requireAuth, requireRole('Admin'), async (req, res) => {
   try {
     const users = await prisma.user.findMany({
       include: {
         tenant: true,
-        role: true
+        role: true,
       },
-      orderBy: { createdAt: 'desc' }
+      orderBy: { createdAt: 'desc' },
     });
-    
-    // Format the users to match what the frontend expects
-    const formattedUsers = users.map(user => ({
+
+    const formattedUsers = users.map((user) => ({
       id: user.cognitoId || user.id,
       name: `${user.firstName || ''} ${user.lastName || ''}`.trim() || user.email.split('@')[0],
       email: user.email,
       role: user.role?.name || 'Student',
-      institution: user.tenant?.institutionName || user.tenant?.name || 'Unknown Institution', // TODO(Part 2)
-      status: 'Active'
+      institution: user.tenant?.institutionName || 'Acuity Global',
+      status: user.isActive ? 'Active' : 'Deactivated',
+      avatarUrl: user.avatarUrl || null,
+      createdAt: user.createdAt,
     }));
 
     return res.json({ users: formattedUsers });
   } catch (error) {
     console.error('Error fetching users:', error);
-    return res.status(500).json({ error: 'Failed to fetch users' });
+    return res.status(500).json({ code: 'SERVER_ERROR', error: 'Failed to fetch users' });
   }
 });
 
 /**
  * @route PUT /api/users/profile
- * @desc Update the current user's profile (name, avatar)
+ * @desc Legacy update for user's profile (name, avatar)
  * @access Private
  */
 router.put('/profile', requireAuth, async (req, res) => {
-  const cognitoId = req.user?.sub;
-  const email = req.user?.email;
   const { firstName, lastName, avatarUrl } = req.body;
+  const userId = req.dbUser.id;
 
   try {
-    const user = await prisma.user.findFirst({
-      where: {
-        OR: [
-          ...(cognitoId ? [{ cognitoId }] : []),
-          ...(email ? [{ email }] : [])
-        ]
-      }
+    const updatedUser = await prisma.user.update({
+      where: { id: userId },
+      data: {
+        ...(firstName !== undefined && { firstName: firstName.trim() }),
+        ...(lastName !== undefined && { lastName: lastName.trim() }),
+        ...(avatarUrl !== undefined && { avatarUrl }),
+      },
+      include: { role: true, tenant: true },
     });
 
-    if (!user) {
-      return res.status(404).json({ error: 'User not found' });
-    }
-
-    const updatedUser = await prisma.user.update({
-      where: { id: user.id },
-      data: {
-        ...(firstName !== undefined && { firstName }),
-        ...(lastName !== undefined && { lastName }),
-        ...(avatarUrl !== undefined && { avatarUrl })
-      }
+    await auditLog({
+      actorId: userId,
+      actorRole: req.dbUser.role?.name || 'Student',
+      tenantId: req.dbUser.tenantId,
+      action: 'USER_PROFILE_UPDATED_LEGACY',
+      resource: 'User',
+      after: { firstName, lastName, avatarUrl },
+      ip: req.ip,
     });
 
     return res.json({ message: 'Profile updated successfully', user: updatedUser });
   } catch (error) {
     console.error('Error updating profile:', error);
-    return res.status(500).json({ error: 'Failed to update profile' });
+    return res.status(500).json({ code: 'SERVER_ERROR', error: 'Failed to update profile' });
   }
 });
 

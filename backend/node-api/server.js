@@ -9,7 +9,24 @@ const port = process.env.PORT || 3000;
 
 // Security and utility middlewares
 app.use(helmet());
-app.use(cors());
+
+const allowedOrigins = process.env.FRONTEND_URL
+  ? process.env.FRONTEND_URL.split(',').map((u) => u.trim())
+  : ['http://localhost:5173', 'http://127.0.0.1:5173'];
+
+app.use(
+  cors({
+    origin: (origin, callback) => {
+      if (!origin || allowedOrigins.includes(origin)) {
+        callback(null, true);
+      } else {
+        callback(new Error(`CORS blocked origin: ${origin}`));
+      }
+    },
+    credentials: true,
+  })
+);
+
 app.use(express.json());
 
 // Public Route
@@ -23,6 +40,7 @@ const projectRoutes = require('./routes/projects');
 const userRoutes = require('./routes/users');
 const uploadRoutes = require('./routes/uploads');
 const adminRoutes = require('./routes/admin');
+const meRoutes = require('./routes/me');
 
 // Protected Route (Requires AWS Cognito Token)
 app.get('/api/protected', requireAuth, (req, res) => {
@@ -38,6 +56,7 @@ app.use('/api/projects', projectRoutes);
 app.use('/api/users', userRoutes);
 app.use('/api/uploads', uploadRoutes);
 app.use('/api/admin', adminRoutes);
+app.use('/api/me', meRoutes);
 
 const { prisma } = require('./utils/db');
 
@@ -51,6 +70,10 @@ app.get('/api/db-test', async (req, res) => {
   }
 });
 
-app.listen(port, () => {
-  console.log(`Node API server listening on port ${port}`);
-});
+if (process.env.NODE_ENV !== 'test') {
+  app.listen(port, () => {
+    console.log(`Node API server listening on port ${port}`);
+  });
+}
+
+module.exports = app;

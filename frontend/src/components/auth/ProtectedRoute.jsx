@@ -29,6 +29,11 @@ export default function ProtectedRoute({ allowedRoles }) {
     return <Navigate to={ROUTES.AUTH.LOGIN} state={{ from: location }} replace />
   }
 
+  // Deactivated users must be directed to the account deactivated page
+  if (user?.isDeactivated) {
+    return <Navigate to={ROUTES.ACCOUNT_DEACTIVATED} replace />
+  }
+
   // Check role authorization if restricted
   if (allowedRoles && allowedRoles.length > 0 && !allowedRoles.includes(user.role)) {
     const fallbackPath = getDefaultRouteForRole(user.role)

@@ -62,4 +62,5 @@ export const ROUTES = {
   // ── Shared Account ──
   SETTINGS: '/settings',
   PROFILE: '/settings',
+  ACCOUNT_DEACTIVATED: '/account-deactivated',
 }
