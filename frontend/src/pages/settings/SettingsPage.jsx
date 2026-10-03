@@ -11,7 +11,7 @@
  * Preserves mock authentication state and localStorage synchronization.
  */
 
-import { useState, useRef } from 'react'
+import { useState, useRef, useEffect } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { useAuth } from '@/context/AuthContext'
 import { ROUTES } from '@/routes/routeConstants'
@@ -79,6 +79,20 @@ export default function SettingsPage() {
       group: user?.group || 'Department of Biological Sciences',
     })
   }
+
+  // Ensure formData stays synchronized whenever user profile details load or update
+  useEffect(() => {
+    if (user) {
+      const splitNames = (user?.displayName || '').trim().split(' ')
+      setFormData((prev) => ({
+        ...prev,
+        firstName: user.firstName ?? (splitNames[0] || prev.firstName || ''),
+        lastName: user.lastName ?? (splitNames.length > 1 ? splitNames.slice(1).join(' ') : prev.lastName || ''),
+        email: user.email || prev.email || '',
+        institution: user.tenant || prev.institution || 'University of Santo Tomas',
+      }))
+    }
+  }, [user])
 
   // Password strength calculation
   const hasMinLength = passwordData.newPassword.length >= 8

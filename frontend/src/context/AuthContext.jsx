@@ -77,9 +77,15 @@ export function AuthProvider({ children }) {
               .then(res => res.json())
               .then(data => {
                 const dbUser = data.user;
+                const firstName = dbUser?.firstName || userAttr.given_name || '';
+                const lastName = dbUser?.lastName || userAttr.family_name || '';
                 setUser({
                   id: dbUser?.id || currentUser.getUsername(),
                   email: userAttr.email,
+                  firstName,
+                  lastName,
+                  displayName: `${firstName} ${lastName}`.trim() || userAttr.email?.split('@')[0],
+                  tenant: dbUser?.tenant?.institutionName || dbUser?.tenant?.name || 'University of Santo Tomas',
                   role: normalizeRole(dbUser?.role?.name),
                   username: currentUser.getUsername(),
                   cognitoSession: session
@@ -88,9 +94,15 @@ export function AuthProvider({ children }) {
               })
               .catch(err => {
                 console.error("Failed to fetch user details from backend database:", err);
+                const firstName = userAttr.given_name || '';
+                const lastName = userAttr.family_name || '';
                 setUser({
                   id: currentUser.getUsername(),
                   email: userAttr.email,
+                  firstName,
+                  lastName,
+                  displayName: `${firstName} ${lastName}`.trim() || userAttr.email?.split('@')[0],
+                  tenant: 'University of Santo Tomas',
                   role: ROLES.STUDENT,
                   username: currentUser.getUsername(),
                   cognitoSession: session
@@ -208,9 +220,15 @@ export function AuthProvider({ children }) {
             .then(res => res.json())
             .then(data => {
               const dbUser = data.user;
+              const firstName = dbUser?.firstName || userAttr.given_name || '';
+              const lastName = dbUser?.lastName || userAttr.family_name || '';
               const sessionUser = {
                 id: dbUser?.id || cognitoUser.getUsername(),
                 email: userAttr.email,
+                firstName,
+                lastName,
+                displayName: `${firstName} ${lastName}`.trim() || userAttr.email?.split('@')[0],
+                tenant: dbUser?.tenant?.institutionName || dbUser?.tenant?.name || 'University of Santo Tomas',
                 role: normalizeRole(dbUser?.role?.name),
                 username: cognitoUser.getUsername(),
                 cognitoSession: result
@@ -222,9 +240,15 @@ export function AuthProvider({ children }) {
             .catch(err => {
               console.error("Failed to sync or fetch user from backend database:", err);
               // Fallback
+              const firstName = userAttr.given_name || '';
+              const lastName = userAttr.family_name || '';
               const sessionUser = {
                 id: cognitoUser.getUsername(),
                 email: userAttr.email,
+                firstName,
+                lastName,
+                displayName: `${firstName} ${lastName}`.trim() || userAttr.email?.split('@')[0],
+                tenant: 'University of Santo Tomas',
                 role: ROLES.STUDENT,
                 username: cognitoUser.getUsername(),
                 cognitoSession: result
@@ -285,6 +309,13 @@ export function AuthProvider({ children }) {
           reject(new Error("Access Denied: Personal email domains are not allowed. Please use your institutional email."));
           return;
         }
+
+        // Format names nicely from email (e.g. juanmiguel.gonzales -> Juan Miguel Gonzales)
+        const usernamePart = (email.split('@')[0] || '').replace(/[\._\-]/g, ' ');
+        const nameParts = usernamePart.split(' ').filter(Boolean).map(w => w.charAt(0).toUpperCase() + w.slice(1));
+        const defaultFirstName = nameParts.length > 1 ? nameParts.slice(0, -1).join(' ') : nameParts[0] || 'Researcher';
+        const defaultLastName = nameParts.length > 1 ? nameParts[nameParts.length - 1] : '';
+
         // Mock a successful login with a mock token that the backend will accept
         const mockToken = 'mock-token-' + email;
         const mockSession = {
@@ -297,7 +328,11 @@ export function AuthProvider({ children }) {
             'Content-Type': 'application/json',
             'Authorization': `Bearer ${mockToken}`
           },
-          body: JSON.stringify({ email })
+          body: JSON.stringify({ 
+            email,
+            firstName: defaultFirstName,
+            lastName: defaultLastName
+          })
         })
         .then(() => fetch('http://localhost:3000/api/auth/me', {
           headers: { 'Authorization': `Bearer ${mockToken}` }
@@ -305,12 +340,16 @@ export function AuthProvider({ children }) {
         .then(res => res.json())
         .then(data => {
            const dbUser = data.user;
+           const firstName = dbUser?.firstName || defaultFirstName;
+           const lastName = dbUser?.lastName || defaultLastName;
            const sessionUser = {
-             id: dbUser?.id,
+             id: dbUser?.id || 'mock-' + email,
              email: email,
-             firstName: dbUser?.firstName,
-             lastName: dbUser?.lastName,
+             firstName,
+             lastName,
+             displayName: `${firstName} ${lastName}`.trim() || email.split('@')[0],
              role: normalizeRole(dbUser?.role?.name),
+             tenant: dbUser?.tenant?.institutionName || dbUser?.tenant?.name || 'University of Santo Tomas',
              username: email,
              cognitoSession: mockSession
            };
@@ -382,19 +421,29 @@ export function AuthProvider({ children }) {
       });
       if (res.ok) {
         const result = await res.json();
-        setUser(prev => ({
-          ...prev,
-          firstName: result.user.firstName,
-          lastName: result.user.lastName,
-          avatarUrl: result.user.avatarUrl
-        }));
+        const updated = result.user || {};
+        setUser(prev => {
+          const newFirst = updated.firstName !== undefined ? updated.firstName : (prev?.firstName || '');
+          const newLast = updated.lastName !== undefined ? updated.lastName : (prev?.lastName || '');
+          return {
+            ...prev,
+            firstName: newFirst,
+            lastName: newLast,
+            displayName: `${newFirst} ${newLast}`.trim() || prev?.displayName || prev?.email?.split('@')[0],
+            avatarUrl: updated.avatarUrl !== undefined ? updated.avatarUrl : prev?.avatarUrl
+          };
+        });
+        return result;
       } else {
-        console.error('Failed to update profile');
+        const errJson = await res.json().catch(() => ({}));
+        throw new Error(errJson.error || 'Failed to update profile');
       }
     } catch (e) {
-      console.error(e);
+      console.error('Update profile error:', e);
+      throw e;
+    } finally {
+      setIsLoading(false);
     }
-    setIsLoading(false);
   }, [user]);
   const changePassword = useCallback(async () => {}, []);
   const deactivateAccount = useCallback(async () => {}, []);

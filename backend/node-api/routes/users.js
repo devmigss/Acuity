@@ -42,20 +42,34 @@ router.get('/', requireAuth, async (req, res) => {
  * @access Private
  */
 router.put('/profile', requireAuth, async (req, res) => {
-  const cognitoId = req.user.sub;
+  const cognitoId = req.user?.sub;
+  const email = req.user?.email;
   const { firstName, lastName, avatarUrl } = req.body;
 
   try {
-    const user = await prisma.user.update({
-      where: { cognitoId },
-      data: {
-        ...(firstName && { firstName }),
-        ...(lastName && { lastName }),
-        ...(avatarUrl && { avatarUrl })
+    const user = await prisma.user.findFirst({
+      where: {
+        OR: [
+          ...(cognitoId ? [{ cognitoId }] : []),
+          ...(email ? [{ email }] : [])
+        ]
       }
     });
 
-    return res.json({ message: 'Profile updated successfully', user });
+    if (!user) {
+      return res.status(404).json({ error: 'User not found' });
+    }
+
+    const updatedUser = await prisma.user.update({
+      where: { id: user.id },
+      data: {
+        ...(firstName !== undefined && { firstName }),
+        ...(lastName !== undefined && { lastName }),
+        ...(avatarUrl !== undefined && { avatarUrl })
+      }
+    });
+
+    return res.json({ message: 'Profile updated successfully', user: updatedUser });
   } catch (error) {
     console.error('Error updating profile:', error);
     return res.status(500).json({ error: 'Failed to update profile' });

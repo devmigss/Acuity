@@ -79,8 +79,10 @@ router.post('/sync', requireAuth, async (req, res) => {
       where: { allowedEmail: (email || '').toLowerCase() }
     });
 
+    const domain = (email || '').split('@')[1];
+    let matchingTenant = domain ? await prisma.tenant.findFirst({ where: { emailDomain: domain } }) : null;
     const assignedRoleId = whitelisted ? facultyRole.id : studentRole.id;
-    const assignedTenantId = defaultTenant.id; // Could also dynamically assign tenant based on whitelist later
+    const assignedTenantId = (whitelisted && whitelisted.tenantId) ? whitelisted.tenantId : (matchingTenant ? matchingTenant.id : defaultTenant.id);
 
     // 4. Create the new user and attach them to the Tenant and Role
     user = await prisma.user.create({
